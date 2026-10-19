@@ -1,6 +1,6 @@
-user:
+users:
   id: int
-  password hash: blob
+  password hash: TEXT
   username: str
   creation_date: date
 
@@ -11,7 +11,7 @@ projects:
   edit_date: date
   create_date: date
 
-char:
+characters:
   id: int
   project_id: projects.int
   name: char(1)
