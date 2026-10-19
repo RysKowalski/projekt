@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from fontTools.pens.ttGlyphPen import TTGlyphPen
-Char = list[list[bool]]
-Bitmap = dict[str, Char]
-
+from declarations import Char, Bitmap
 
 class Font:
     def __init__(self, bitmap, name, unit_per_em=1000, left_margin=100, baseline=150):

@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
+from declarations import Char, Bitmap
 
-
-Char = list[list[bool]]
-Bitmap = dict[str, Char]
 
 app: FastAPI = FastAPI()
 app.frontend("/", directory="frontend")
