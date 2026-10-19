@@ -13,7 +13,7 @@ class Font:
 
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(pen, x, y, scale, height):
+    def pixel_to_square(self, pen, x, y, scale, height):
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * scale
         xmax = (x + 1) * scale
