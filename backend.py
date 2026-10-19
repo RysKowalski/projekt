@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from fontTools.pens.ttGlyphPen import TTGlyphPen
-from declarations import Char, Bitmap
+from fontTools.pens.ttGlyphPen import TTGlyphPen, Glyph
+from declarations import Char, Bitmap, Glyph
 
 
 class Font:
@@ -13,7 +13,7 @@ class Font:
         self.baseline: int
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int, scale: int, height: int):
+    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int, scale: int = 100, height: int = 500) -> None:
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * scale
         xmax = (x + 1) * scale
@@ -27,8 +27,8 @@ class Font:
         pen.lineTo((xmax, ymax))
         pen.lineTo((xmin, ymax))
         pen.closePath()
-
-    def bitmap_to_glyph(self, written_characters: Bitmap, scale=100):
+    
+    def bitmap_to_glyph(self, written_characters: Bitmap, scale=100) -> Glyph:
         height: int = len(written_characters)
         width: int = len(bitmap[0])
 
@@ -40,6 +40,9 @@ class Font:
                     self.pixel_to_square(pen, x, y, scale, height)
 
         return pen.glyph()
+
+    def create_font(self, output_path: str) -> None: # none = void
+
 
 
 bitmap = [
