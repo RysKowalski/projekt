@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from declarations import Char, Bitmap
+from declarations import Bitmap
 
 
 app: FastAPI = FastAPI()
