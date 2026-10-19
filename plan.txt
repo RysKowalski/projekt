@@ -22,4 +22,5 @@ char:
 
 
 frontent - Kuba
-zamiana
+generowanie ttf - Dominik
+Dostęp do bazy danych - Jerzy
