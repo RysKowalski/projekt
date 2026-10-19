@@ -11,3 +11,13 @@ app.frontend("/", directory="frontend")
 def get_ttf(font: Bitmap) -> FileResponse:
     print(font)
     return FileResponse("aria.ttf", filename="font.ttf")
+
+
+@app.post("/login")
+def login(username: str, password: str) -> None:
+    return
+
+
+@app.post("/register")
+def register(username: str, password: str) -> None:
+    return

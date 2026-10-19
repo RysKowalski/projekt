@@ -1,0 +1,25 @@
+user:
+  id: int
+  password hash: blob
+  username: str
+  creation_date: date
+
+projects:
+  id: int 
+  name: str
+  user_id: int user.id
+  edit_date: date
+  create_date: date
+
+char:
+  id: int
+  project_id: projects.int
+  name: char(1)
+  sizex: int
+  sizey: int
+  data: blob
+
+
+
+frontent - Kuba
+zamiana
