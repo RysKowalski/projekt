@@ -3,7 +3,7 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from declarations import Char, Bitmap
 
 class Font:
-    def __init__(self, bitmap, name, unit_per_em=1000, left_margin=100, baseline=150):
+    def __init__(self, bitmap: Bitmap, name: str, unit_per_em=1000, left_margin=100, baseline=150):
         self.name: str
         self.unit_per_em: int
         self.left_margin: int
@@ -11,7 +11,7 @@ class Font:
 
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(self, pen, x, y, scale, height):
+    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int, scale: int, height: int):
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * scale
         xmax = (x + 1) * scale
@@ -30,7 +30,7 @@ class Font:
         height: int = len(written_characters)
         width: int = len(bitmap[0])
         
-        pen = TTGlyphPen(None)
+        pen: TTGlyphPen = TTGlyphPen(None)
 
         for y in range(height):
             for x in range(width):
