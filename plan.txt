@@ -7,7 +7,7 @@ user:
 projects:
   id: int 
   name: str
-  user_id: int user.id
+  user_id: user.id
   edit_date: date
   create_date: date
 
@@ -21,6 +21,7 @@ char:
 
 
 
-frontent - Kuba
+frontent login register- Kuba
 generowanie ttf - Dominik
 Dostęp do bazy danych - Jerzy
+Logowanie z API - Jerzy
