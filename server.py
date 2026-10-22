@@ -27,10 +27,8 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 fake_users_db = {
     "johndoe": {
         "username": "johndoe",
-        "full_name": "John Doe",
-        "email": "johndoe@example.com",
+        "creation_date": "10-12-2026",
         "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$L/MJltuObDqtWua9zyguTw$SJc2YZVIrfpCwqRvybBojemv36U2hrHTT3TGPZFoQbw",
-        "disabled": False,
     }
 }
 
@@ -46,9 +44,7 @@ class TokenData(BaseModel):
 
 class User(BaseModel):
     username: str
-    email: str | None = None
-    full_name: str | None = None
-    disabled: bool | None = None
+    creation_date: str
 
 
 class UserInDB(User):
@@ -119,14 +115,6 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     return user
 
 
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
-
-
 @app.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
@@ -147,14 +135,14 @@ async def login_for_access_token(
 
 @app.get("/users/me/")
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     return current_user
 
 
 @app.get("/users/me/items/")
 async def read_own_items(
-    current_user: Annotated[User, Depends(get_current_active_user)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     return [{"item_id": "Foo", "owner": current_user.username}]
 
@@ -169,8 +157,6 @@ def get_ttf(font: Bitmap) -> FileResponse:
 def register(username: str, password: str) -> None:
     fake_users_db[username] = {
         "username": username,
-        "full_name": "full name",
-        "email": "email@example.com",
         "hashed_password": password_hash.hash(password),
-        "disabled": False,
+        "creation_date": datetime.now().strftime("%Y-%m-%d"),
     }
