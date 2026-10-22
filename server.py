@@ -11,6 +11,7 @@ from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 
+from database import Database, User
 from declarations import Bitmap
 
 # to get a string like this run:
@@ -24,13 +25,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
-fake_users_db = {
-    "johndoe": {
-        "username": "johndoe",
-        "creation_date": "10-12-2026",
-        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$L/MJltuObDqtWua9zyguTw$SJc2YZVIrfpCwqRvybBojemv36U2hrHTT3TGPZFoQbw",
-    }
-}
+db: Database = Database()
 
 
 class Token(BaseModel):
@@ -40,11 +35,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str
-
-
-class User(BaseModel):
-    username: str
-    creation_date: str
 
 
 class UserInDB(User):
@@ -106,12 +96,9 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
         username = payload.get("sub")
         if username is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(fake_users_db, username=token_data.username)
-    if user is None:
-        raise credentials_exception
+    user: User = db.get_user(username, password_hash.hash(token_data))
     return user
 
 

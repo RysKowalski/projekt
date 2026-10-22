@@ -1,7 +1,21 @@
 from contextlib import contextmanager
+from dataclasses import dataclass
 import sqlite3
 from sqlite3 import Connection, Cursor
 from typing import Iterator
+
+
+class InvalidUserError(Exception):
+    def __init__(self, username: str) -> None:
+        self.message = f"user {username} does not exist or has incorrect password"
+        super().__init__(self.message)
+
+
+@dataclass(frozen=True)
+class User:
+    id: int
+    username: str
+    creation_date: str
 
 
 class Database:
@@ -50,3 +64,22 @@ class Database:
             """)
 
             conn.commit()
+
+    def get_user(self, username: str, password_hash: str) -> User:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT id, password_hash, username, creation_date  FROM users WHERE username=? AND password_hash=?
+            """,
+                (username, password_hash),
+            )
+
+            result = cursor.fetchone()
+        if result is None:
+            raise InvalidUserError(username)
+        if password_hash != result[1]:
+            raise InvalidUserError(username)
+
+        return User(result[0], result[2], result[3])
