@@ -1,18 +1,25 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi.responses import FileResponse
 import jwt
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
-from declarations import Bitmap
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 
+from declarations import Bitmap
+
 # to get a string like this run:
 # openssl rand -hex 32
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+load_dotenv()
+SECRET_KEY: str | None = os.getenv("SECRET_KEY")
+if SECRET_KEY is None:
+    raise LookupError('environment variable "SECRET_KEY" is not present')
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -22,7 +29,7 @@ fake_users_db = {
         "username": "johndoe",
         "full_name": "John Doe",
         "email": "johndoe@example.com",
-        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$wmQCvKud4xOoE2VjzOqmLA$xQbwaIQMVvoWAb45VJrI0bzrk0DAZDIYFHFNc72eVqk",
+        "hashed_password": "$argon2id$v=19$m=65536,t=3,p=4$L/MJltuObDqtWua9zyguTw$SJc2YZVIrfpCwqRvybBojemv36U2hrHTT3TGPZFoQbw",
         "disabled": False,
     }
 }
@@ -50,7 +57,7 @@ class UserInDB(User):
 
 password_hash = PasswordHash.recommended()
 
-DUMMY_HASH = password_hash.hash("dummypassword")
+DUMMY_HASH = password_hash.hash("secret")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -75,7 +82,6 @@ def get_user(db, username: str):
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
-        verify_password(password, DUMMY_HASH)
         return False
     if not verify_password(password, user.hashed_password):
         return False
@@ -159,11 +165,12 @@ def get_ttf(font: Bitmap) -> FileResponse:
     return FileResponse("aria.ttf", filename="font.ttf")
 
 
-@app.post("/login")
-def login(username: str, password: str) -> None:
-    return
-
-
 @app.post("/register")
 def register(username: str, password: str) -> None:
-    return
+    fake_users_db[username] = {
+        "username": username,
+        "full_name": "full name",
+        "email": "email@example.com",
+        "hashed_password": password_hash.hash(password),
+        "disabled": False,
+    }
