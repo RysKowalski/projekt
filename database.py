@@ -1,15 +1,9 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
-from datetime import datetime
 import sqlite3
 from sqlite3 import Connection, Cursor
-from typing import Iterator
-
-
-class InvalidUserError(Exception):
-    def __init__(self, username: str) -> None:
-        self.message = f"user {username} does not exist or has incorrect password"
-        super().__init__(self.message)
+from typing import Generator
+from declarations import Bitmap
 
 
 @dataclass(frozen=True)
@@ -27,10 +21,10 @@ class UserInDb(User):
 class Database:
     def __init__(self) -> None:
         self.dbPath: str = "database.sqlite"
-        self.init_db()
+        self.create_tables()
 
     @contextmanager
-    def _connect(self) -> Iterator[Connection]:
+    def _connect(self) -> Generator[Connection]:
         conn: Connection = sqlite3.connect(self.dbPath)
         try:
             yield conn
@@ -40,7 +34,7 @@ class Database:
         finally:
             conn.close()
 
-    def init_db(self) -> None:
+    def create_tables(self) -> None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -49,7 +43,7 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     password_hash TEXT NOT NULL,
                     username TEXT UNIQUE NOT NULL,
-                    creation_date DATE NOT NULL
+                    creation_date DATE NOT NULL DEFAULT CURRENT_TIME
                 );
             """)
 
@@ -58,8 +52,8 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     user_id INTEGER NOT NULL,
-                    edit_date DATE NOT NULL,
-                    create_date DATE NOT NULL,
+                    edit_date DATE NOT NULL DEFAULT CURRENT_TIME,
+                    create_date DATE NOT NULL DEFAULT CURRENT_TIME,
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 );
             """)
@@ -101,8 +95,31 @@ class Database:
 
             cursor.execute(
                 """
-                INSERT INTO users (password_hash, username, creation_date) VALUES (?, ?, ?)
+                INSERT INTO users (password_hash, username) VALUES (?, ?)
                 """,
-                (password_hash, username, datetime.now().strftime("%Y-%m-%d")),
+                (password_hash, username),
             )
             conn.commit()
+
+    def add_project(self, name: int, user_id: str) -> None:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                INSERT INTO projects (name, user_id) VALUES (?, ?)
+            """,
+                (name, user_id),
+            )
+
+    def add_bitmap(self, bitmap: Bitmap) -> None:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            for name, char in bitmap.items():
+                char
+
+    def _encode_grid(self, grid: list[list[bool]]) -> tuple[int, int, bytes]:
+        size_y: int = len(grid)
+        size_x: int = 
+

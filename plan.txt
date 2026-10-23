@@ -21,7 +21,7 @@ characters:
 
 
 
-frontent login register- Kuba
-generowanie ttf - Dominik
-Dostęp do bazy danych - Jerzy
-Logowanie z API - Jerzy
+[ ] frontent login register- Kuba
+[ ] generowanie ttf - Dominik
+[ ] dostęp do bazy danych - Jerzy
+[x] logowanie z API - Jerzy
