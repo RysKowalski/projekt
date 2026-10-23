@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import sqlite3
 from sqlite3 import Connection, Cursor
 from typing import Generator
-from declarations import Bitmap
+from declarations import Bitmap, Char
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ class Database:
 
         return UserInDb(result[0], result[1], result[2], result[3])
 
-    def add_user(self, username: str, password_hash: str) -> None:
+    def add_user(self, username: str, password_hash: str) -> int:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -99,9 +99,13 @@ class Database:
                 """,
                 (password_hash, username),
             )
+            id: int | None = cursor.lastrowid
             conn.commit()
+        if not id:
+            return -1
+        return id
 
-    def add_project(self, name: int, user_id: str) -> None:
+    def add_project(self, user_id: str, name: int) -> None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -112,14 +116,70 @@ class Database:
                 (name, user_id),
             )
 
-    def add_bitmap(self, bitmap: Bitmap) -> None:
+    def add_bitmap(self, project_id: int, bitmap: Bitmap) -> None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
             for name, char in bitmap.items():
-                char
+                size_x, size_y, data = self._encode_char(char)
+                cursor.execute(
+                    """
+                    INSERT INTO characters (project_id, name, sizex, sizey, data)
+                    VALUES (?, ?, ?, ?, ?)
+                """,
+                    (project_id, name, size_x, size_y, data),
+                )
+            conn.commit()
 
-    def _encode_grid(self, grid: list[list[bool]]) -> tuple[int, int, bytes]:
+    def _encode_char(self, grid: Char) -> tuple[int, int, bytes]:
         size_y: int = len(grid)
-        size_x: int = 
+        size_x: int = len(grid[0])
 
+        data: bytearray = bytearray((size_x * size_y + 7) // 8)
+
+        for y, row in enumerate(grid):
+            for x, value in enumerate(row):
+                if value:
+                    index: int = y * size_x + x
+                    data[index // 8] |= 1 << (index % 8)
+
+        return size_x, size_y, bytes(data)
+
+    def get_char(self, char_id: int) -> Char:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT sizex, sizey, data FROM characters WHERE id=?
+            """,
+                (char_id,),
+            )
+            result = cursor.fetchone()
+
+        if not result:
+            return []
+
+        size_x: int
+        size_y: int
+        data: bytes
+        size_x, size_y, data = result
+
+        return self._decode_char(size_x, size_y, data)
+
+    def _decode_char(self, size_x: int, size_y: int, data: bytes) -> Char:
+        grid: list[list[bool]] = []
+        i: int = 0
+
+        for _ in range(size_y):
+            row: list[bool] = []
+            for _ in range(size_x):
+                byte_index: int = i // 8
+                bit_position: int = i % 8
+                mask: int = 1 << bit_position
+                bit: bool = bool(data[byte_index] & mask)
+
+                row.append(bit)
+            grid.append(row)
+
+        return grid
