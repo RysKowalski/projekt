@@ -1,8 +1,9 @@
+import sqlite3
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
-import sqlite3
 from sqlite3 import Connection, Cursor
-from typing import Generator
+
 from declarations import Bitmap, Char
 
 
@@ -18,6 +19,14 @@ class UserInDb(User):
     password_hash: str
 
 
+@dataclass(frozen=True)
+class Project:
+    id: int
+    name: str
+    edit_date: str
+    creation_date: str
+
+
 class Database:
     def __init__(self) -> None:
         self.dbPath: str = "database.sqlite"
@@ -27,6 +36,7 @@ class Database:
     def _connect(self) -> Generator[Connection]:
         conn: Connection = sqlite3.connect(self.dbPath)
         try:
+            conn.execute("PRAGMA foreign_keys = ON")
             yield conn
         except Exception:
             conn.rollback()
@@ -54,7 +64,7 @@ class Database:
                     user_id INTEGER NOT NULL,
                     edit_date DATE NOT NULL DEFAULT CURRENT_TIME,
                     create_date DATE NOT NULL DEFAULT CURRENT_TIME,
-                    FOREIGN KEY (user_id) REFERENCES users(id)
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
 
@@ -66,7 +76,7 @@ class Database:
                     sizex INTEGER NOT NULL,
                     sizey INTEGER NOT NULL,
                     data BLOB NOT NULL,
-                    FOREIGN KEY (project_id) REFERENCES projects(id)
+                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
                 );
             """)
 
@@ -105,7 +115,20 @@ class Database:
             return -1
         return id
 
-    def add_project(self, user_id: str, name: int) -> None:
+    def delete_user(self, user_id: int) -> None:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                DELETE FROM users WHERE id=?
+            """,
+                (user_id,),
+            )
+
+            conn.commit()
+
+    def add_project(self, user_id: str, name: int) -> int:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -115,6 +138,55 @@ class Database:
             """,
                 (name, user_id),
             )
+
+            id: int | None = cursor.lastrowid
+            conn.commit()
+
+        if id is None:
+            return -1
+        return id
+
+    def delete_project(self, project_id: int) -> None:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute("DELETE FROM projects WHERE id=?", (project_id,))
+
+            conn.commit()
+
+    def get_project_list(self, user_id: int) -> list[tuple[int, str]]:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT id, name FROM projects
+                WHERE user_id=?
+            """,
+                (user_id,),
+            )
+
+            data = cursor.fetchall()
+        return data
+
+    def get_project(self, project_id: int) -> Project:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT name, edit_date, creation_date
+                FROM projects
+                WHERE id=?
+            """,
+                (project_id,),
+            )
+
+            data = cursor.fetchone()
+        if data is None:
+            return Project(-1, "None", "", "")
+
+        return Project(project_id, data[0], data[1], data[2])
 
     def add_bitmap(self, project_id: int, bitmap: Bitmap) -> None:
         with self._connect() as conn:
@@ -144,6 +216,24 @@ class Database:
                     data[index // 8] |= 1 << (index % 8)
 
         return size_x, size_y, bytes(data)
+
+    def get_bitmap(self, project_id: int) -> Bitmap:
+        with self._connect() as conn:
+            cursor: Cursor = conn.cursor()
+
+            cursor.execute(
+                """
+                SELECT name, sizex, sizey, data
+                FROM characters
+                WHERE project_id=?
+            """,
+                (project_id,),
+            )
+
+            bitmap: Bitmap = {}
+            for row in cursor:
+                bitmap[row[0]] = self._decode_char(row[1], row[2], row[3])
+        return bitmap
 
     def get_char(self, char_id: int) -> Char:
         with self._connect() as conn:
