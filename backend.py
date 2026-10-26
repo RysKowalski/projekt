@@ -7,7 +7,8 @@ from declarations import Char, Bitmap
 class Font:
     def __init__(self, 
                  bitmaps: Bitmap, 
-                 name: str, unit_per_em=1000, 
+                 name: str, 
+                 unit_per_em=1000, 
                  left_margin=100, 
                  right_margin=100, 
                  scale=100,
@@ -116,30 +117,30 @@ class Font:
 
 
 
+if __name__ == '__main__':
+    char_A = [
+        [False, True, True,   True,  False],
+        [True,  False, False, False, True],
+        [True,  True,  True,  True,  True],
+        [True,  False, False, False, True],
+        [True,  False, False, False, True]
+    ]
 
-char_A = [
-    [False, False, True, True, False],
-    [False, True, False, False, True],
-    [True, True, True, True, True],
-    [True, False, False, False, True],
-    [True, False, False, False, True]
-]
+    char_B = [
+        [True, True, True, False, False],
+        [True, False, False, True, False],
+        [True, False, True, False, False],
+        [True, False, False, True, False],
+        [True, True, True, False, False]
+    ]
 
-char_B = [
-    [True, True, True, False, False],
-    [True, False, False, True, False],
-    [True, False, True, False, False],
-    [True, False, False, True, False],
-    [True, True, True, False, False]
-]
+    bitmaps = {
+        'A': char_A,
+        'B': char_B,
+        'a': char_A,
+        'b': char_B
 
-bitmaps = {
-    'A': char_A,
-    'B': char_B,
-    'a': char_A,
-    'b': char_B
+    }
 
-}
-
-my_font = Font(bitmaps=bitmaps, name="font")
-my_font.create_font("please_for_the_love_of_god_or_whoever_is_in_charge_of_the_universe_work.ttf")
+    my_font = Font(bitmaps=bitmaps, name="font")
+    my_font.create_font("please_for_the_love_of_god_or_whoever_is_in_charge_of_the_universe_work.ttf")
