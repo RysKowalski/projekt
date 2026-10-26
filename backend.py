@@ -8,29 +8,46 @@ class Font:
     def __init__(self, 
                  bitmaps: Bitmap, 
                  name: str, 
-                 unit_per_em=1000, 
-                 left_margin=100, 
-                 right_margin=100, 
                  scale=100,
-                 ascent=800,
-                 descent=-200
+                 baseline_from_bottom=0, 
+                 unit_per_em=1000
                  ):
+        
         self.name: str = name
+
+        self.scale = scale
+
+        # every glyph should be the same height!
+        self.height = len(list(bitmaps.values())[0])
+
+
+        # unit per em is canvas for a glyph. it most often should sum to 1000 or 2048
+        # it is used for nice scaling so when user selects 6px font it scales to it
         self.unit_per_em: int = unit_per_em
-        self.left_margin: int = left_margin
-        self.right_margin: int = right_margin
+
+        
+        self.left_margin: int = scale
+        self.right_margin: int = scale
+
+
+        self.baseline = self.height - baseline_from_bottom
+        # height - baseline from bottom is baseline from top
+
+        self.ascent = self.baseline * scale
+        self.descent = -1 * baseline_from_bottom * scale
+
         self.bitmaps: Bitmap = bitmaps
-        self.scale: int = scale
-        self.ascent: int = ascent
-        self.descent: int = descent
+        
+
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int, scale: int = 100, height: int = 500) -> None:
+    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int) -> None:
+        print(f"x: {x}\ny:{y}")
         # 1.turning pixels into coordinates (see notes for more info)
-        xmin = x * scale
-        xmax = (x + 1) * scale
-        ymin = (height - 1 - y) * scale
-        ymax = (height - y) * scale
+        xmin = x * self.scale
+        xmax = (x + 1) * self.scale
+        ymin = (self.baseline - 1 - y) * self.scale
+        ymax = (self.baseline - y) * self.scale
 
         # 2.building square based on coordinates above
         # moveTo = setting up paint lineTo = draws line from previous point to provided one
@@ -41,15 +58,14 @@ class Font:
         pen.closePath()
     
     def bitmap_to_glyph(self, bitmap: Char) -> Glyph:
-        height: int = len(bitmap)
         width: int = len(bitmap[0])
 
         pen: TTGlyphPen = TTGlyphPen(None)
 
-        for y in range(height):
+        for y in range(self.height):
             for x in range(width):
                 if bitmap[y][x]:
-                    self.pixel_to_square(pen, x, y, self.scale, height)
+                    self.pixel_to_square(pen, x, y)
 
         return pen.glyph()
 
