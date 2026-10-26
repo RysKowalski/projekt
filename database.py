@@ -62,8 +62,8 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     user_id INTEGER NOT NULL,
-                    edit_date DATE NOT NULL DEFAULT CURRENT_TIME,
-                    create_date DATE NOT NULL DEFAULT CURRENT_TIME,
+                    edition_date DATE NOT NULL DEFAULT CURRENT_TIME,
+                    creation_date DATE NOT NULL DEFAULT CURRENT_TIME,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
@@ -171,15 +171,15 @@ class ProjectDB(DatabaseBase):
             )
 
             data = cursor.fetchall()
-        return data
+        return data.copy()
 
-    def get_project(self, project_id: int) -> Project:
+    def get_project(self, project_id: int) -> Project | None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
             cursor.execute(
                 """
-                SELECT name, edit_date, creation_date
+                SELECT name, edition_date, creation_date
                 FROM projects
                 WHERE id=?
             """,
@@ -188,7 +188,7 @@ class ProjectDB(DatabaseBase):
 
             data = cursor.fetchone()
         if data is None:
-            return Project(-1, "None", "", "")
+            return
 
         return Project(project_id, data[0], data[1], data[2])
 
@@ -274,6 +274,7 @@ class ProjectDB(DatabaseBase):
                 bit: bool = bool(data[byte_index] & mask)
 
                 row.append(bit)
+                i += 1
             grid.append(row)
 
         return grid
