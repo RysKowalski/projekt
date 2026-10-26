@@ -4,19 +4,24 @@ from typing import Annotated
 
 import jwt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+    status,
+    APIRouter,
+)
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 
-from database import Database, User, UserInDb
+from database import Database, Project, User, UserInDb
 from declarations import Bitmap
 
-# to get a string like this run:
-# openssl rand -hex 32
 load_dotenv()
+# openssl rand -hex 32
 SECRET_KEY: str | None = os.getenv("SECRET_KEY")
 if SECRET_KEY is None:
     raise LookupError('environment variable "SECRET_KEY" is not present')
@@ -43,9 +48,11 @@ db: Database = Database()
 
 password_hash = PasswordHash.recommended()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 app = FastAPI()
 app.frontend("/", directory="frontend")
+
+api_router: APIRouter = APIRouter(prefix="/api")
 
 
 def verify_password(plain_password, hashed_password):
@@ -90,6 +97,7 @@ async def get_current_user(
         username = payload.get("sub")
 
         if username is None:
+            print(username)
             raise credentials_exception
 
     except InvalidTokenError:
@@ -99,7 +107,21 @@ async def get_current_user(
     return user
 
 
-@app.post("/token")
+async def get_project_id(
+    project_id: int, current_user: Annotated[User, Depends(get_current_user)]
+) -> int:
+    avalible_projects: list[tuple[int, str]] = db.get_project_list(current_user.id)
+    project_ids: list[int] = [p[0] for p in avalible_projects]
+
+    if project_id not in project_ids:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail="No permission to access this project",
+        )
+    return project_id
+
+
+@api_router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -117,22 +139,15 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@app.get("/users/me/")
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    return current_user
-
-
-@app.post("/ttf")
-def get_ttf(
+@api_router.post("/ttf")
+async def get_ttf(
     font: Bitmap, _: Annotated[User, Depends(get_current_user)]
 ) -> FileResponse:
     print(font)
     return FileResponse("aria.ttf", filename="font.ttf")
 
 
-@app.post("/register")
+@api_router.post("/register")
 def register(data: RegisterData) -> None:
     if db.get_user(data.username) is not None:
         raise HTTPException(
@@ -140,3 +155,57 @@ def register(data: RegisterData) -> None:
         )
 
     db.add_user(data.username, get_password_hash(data.password))
+
+
+@api_router.get("/me")
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    return current_user
+
+
+@api_router.delete("/delete_user")
+def delete_user(current_user: Annotated[User, Depends(get_current_user)]) -> None:
+    db.delete_user(current_user.id)
+
+
+@api_router.post("/create_project")
+def create_project(
+    name: str,
+    user: Annotated[User, Depends(get_current_user)],
+) -> int:
+    return db.add_project(user.id, name)
+
+
+@api_router.delete("/delete_project")
+def delete_project(
+    project_id: int, _: Annotated[User, Depends(get_current_user)]
+) -> None:
+    db.delete_project(project_id)
+
+
+@api_router.get("/project_list")
+def get_project_list(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> list[tuple[int, str]]:
+    return db.get_project_list(current_user.id)
+
+
+@api_router.get("/project")
+def get_project(project_id: Annotated[int, Depends(get_project_id)]) -> Project | None:
+    return db.get_project(project_id)
+
+
+@api_router.put("/bitmaps")
+def put_bitmaps(
+    bitmaps: Bitmap,
+    project_id: Annotated[int, Depends(get_project_id)],
+) -> None:
+    db.set_bitmap(project_id, bitmaps)
+
+
+def get_bitmaps(project_id: Annotated[int, Depends(get_project_id)]) -> Bitmap:
+    return db.get_bitmap(project_id)
+
+
+app.include_router(api_router)

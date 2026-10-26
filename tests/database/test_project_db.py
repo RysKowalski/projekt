@@ -80,7 +80,7 @@ def test_add_get_bitmap() -> None:
     user_id: int = db.add_user(TEST_USERNAME, TEST_PASSWORD_HASH)
     project_id: int = db.add_project(user_id, TEST_PROJECT_NAME)
 
-    db.add_bitmap(project_id, TEST_BITMAPS)
+    db.set_bitmap(project_id, TEST_BITMAPS)
     result: Bitmap = db.get_bitmap(project_id)
 
     assert result == TEST_BITMAPS
