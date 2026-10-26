@@ -27,14 +27,14 @@ class Project:
     creation_date: str
 
 
-class Database:
-    def __init__(self) -> None:
-        self.dbPath: str = "database.sqlite"
+class DatabaseBase:
+    def __init__(self, db_path: str = "database.sqlite") -> None:
+        self.db_path: str = db_path
         self.create_tables()
 
     @contextmanager
     def _connect(self) -> Generator[Connection]:
-        conn: Connection = sqlite3.connect(self.dbPath)
+        conn: Connection = sqlite3.connect(self.db_path)
         try:
             conn.execute("PRAGMA foreign_keys = ON")
             yield conn
@@ -82,6 +82,8 @@ class Database:
 
             conn.commit()
 
+
+class UserDB(DatabaseBase):
     def get_user(self, username: str) -> UserInDb | None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
@@ -128,7 +130,9 @@ class Database:
 
             conn.commit()
 
-    def add_project(self, user_id: str, name: int) -> int:
+
+class ProjectDB(DatabaseBase):
+    def add_project(self, user_id: int, name: str) -> int:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -273,3 +277,6 @@ class Database:
             grid.append(row)
 
         return grid
+
+
+class Database(UserDB, ProjectDB): ...
