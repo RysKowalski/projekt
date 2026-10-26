@@ -7,13 +7,20 @@ from declarations import Char, Bitmap
 class Font:
     def __init__(self, 
                  bitmaps: Bitmap, 
-                 name: str, 
                  scale=100,
                  baseline_from_bottom=0, 
                  unit_per_em=1000
                  ):
+    
+        self.update_variables(bitmaps, scale, baseline_from_bottom, unit_per_em)
         
-        self.name: str = name
+    def update_variables(self, 
+                 bitmaps: Bitmap, 
+                 scale=100,
+                 baseline_from_bottom=0, 
+                 unit_per_em=1000
+                 ):
+    
 
         self.scale = scale
 
@@ -37,8 +44,6 @@ class Font:
         self.descent = -1 * baseline_from_bottom * scale
 
         self.bitmaps: Bitmap = bitmaps
-        
-
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
     def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int) -> None:
@@ -57,19 +62,19 @@ class Font:
         pen.lineTo((xmin, ymax))
         pen.closePath()
     
-    def bitmap_to_glyph(self, bitmap: Char) -> Glyph:
-        width: int = len(bitmap[0])
+    def bitmap_to_glyph(self) -> Glyph:
+        width: int = len(self.bitmap[0])
 
         pen: TTGlyphPen = TTGlyphPen(None)
 
         for y in range(self.height):
             for x in range(width):
-                if bitmap[y][x]:
+                if self.bitmap[y][x]:
                     self.pixel_to_square(pen, x, y)
 
         return pen.glyph()
 
-    def create_font(self, output_path: str) -> None: # none = void
+    def create_font(self, name: str, output_path: str) -> None: # none = void
         # units per em is how many 
         fb = FontBuilder(self.unit_per_em, isTTF=True) 
 
@@ -87,7 +92,7 @@ class Font:
 
         for char_name, bitmap in self.bitmaps.items():
             
-            glyphs[char_name] = self.bitmap_to_glyph(bitmap)
+            glyphs[char_name] = self.bitmap_to_glyph()
 
             width = len(bitmap[0])
 
