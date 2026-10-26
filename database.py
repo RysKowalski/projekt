@@ -52,8 +52,8 @@ class DatabaseBase:
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     password_hash TEXT NOT NULL,
-                    username TEXT UNIQUE NOT NULL,
-                    creation_date DATE NOT NULL DEFAULT CURRENT_TIME
+                    name TEXT UNIQUE NOT NULL,
+                    created DATE NOT NULL DEFAULT CURRENT_TIME
                 );
             """)
 
@@ -62,8 +62,8 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     user_id INTEGER NOT NULL,
-                    edition_date DATE NOT NULL DEFAULT CURRENT_TIME,
-                    creation_date DATE NOT NULL DEFAULT CURRENT_TIME,
+                    edited DATE NOT NULL DEFAULT CURRENT_TIME,
+                    created DATE NOT NULL DEFAULT CURRENT_TIME,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
@@ -75,7 +75,7 @@ class DatabaseBase:
                     name CHAR(1) NOT NULL,
                     sizex INTEGER NOT NULL,
                     sizey INTEGER NOT NULL,
-                    data BLOB NOT NULL,
+                    bitmap BLOB NOT NULL,
                     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
                 );
             """)
@@ -90,7 +90,7 @@ class UserDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT id, username, creation_date, password_hash FROM users WHERE username=?;
+                SELECT id, name, created, password_hash FROM users WHERE name=?;
             """,
                 (username,),
             )
@@ -107,7 +107,7 @@ class UserDB(DatabaseBase):
 
             cursor.execute(
                 """
-                INSERT INTO users (password_hash, username) VALUES (?, ?)
+                INSERT INTO users (password_hash, name) VALUES (?, ?)
                 """,
                 (password_hash, username),
             )
@@ -179,7 +179,7 @@ class ProjectDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT name, edition_date, creation_date
+                SELECT name, edited, created
                 FROM projects
                 WHERE id=?
             """,
@@ -192,7 +192,7 @@ class ProjectDB(DatabaseBase):
 
         return Project(project_id, data[0], data[1], data[2])
 
-    def add_bitmap(self, project_id: int, bitmap: Bitmap) -> None:
+    def set_bitmap(self, project_id: int, bitmap: Bitmap) -> None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -200,7 +200,7 @@ class ProjectDB(DatabaseBase):
                 size_x, size_y, data = self._encode_char(char)
                 cursor.execute(
                     """
-                    INSERT INTO characters (project_id, name, sizex, sizey, data)
+                    INSERT INTO characters (project_id, name, sizex, sizey, bitmap)
                     VALUES (?, ?, ?, ?, ?)
                 """,
                     (project_id, name, size_x, size_y, data),
@@ -227,7 +227,7 @@ class ProjectDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT name, sizex, sizey, data
+                SELECT name, sizex, sizey, bitmap
                 FROM characters
                 WHERE project_id=?
             """,
@@ -245,7 +245,7 @@ class ProjectDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT sizex, sizey, data FROM characters WHERE id=?
+                SELECT sizex, sizey, bitmap FROM characters WHERE id=?
             """,
                 (char_id,),
             )
@@ -263,8 +263,8 @@ class ProjectDB(DatabaseBase):
 
     def _decode_char(self, size_x: int, size_y: int, data: bytes) -> Char:
         grid: list[list[bool]] = []
-        i: int = 0
 
+        i: int = 0
         for _ in range(size_y):
             row: list[bool] = []
             for _ in range(size_x):
