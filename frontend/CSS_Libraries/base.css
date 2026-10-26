@@ -1,3 +1,6 @@
+/* font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 :root {
     --bg: #09090b;
     --surface: #101013;
@@ -24,8 +27,49 @@ header {
 #header-icon-link {
     height: 75%;
     margin-left: 1vw;
+    margin-right: 1vw;
+
+    transition: 0.1s;
+}
+
+#header-icon-link:hover {
+    transform: scale(1.05);
 }
 
 #header-icon {
     height: 100%;
+}
+
+#toolbar {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+    align-items: center;
+}
+
+.toolbarButton {
+    height: 30%;
+    width: auto;
+    padding: 0.8rem;
+    
+    font-family: 'Inter', sans-serif;
+    text-decoration: none;
+    color: var(--text);
+
+    background-color: var(--surface);
+    border: 3px solid var(--border);
+    border-radius: 10px;
+
+    margin-left: 0.4%;
+    margin-right: 0.4%;
+
+    transition: 0.1s;
+}
+
+.toolbarButton:hover {
+    background-color: var(--bg);
+    transform: scale(1.05);
 }

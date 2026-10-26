@@ -6,6 +6,11 @@ form.addEventListener("submit", async(event) => {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
+    if (username == "" || password == "") {
+        document.getElementById("errorMessage").innerHTML = "Nie podano wszystkich danych";
+        return;
+    }
+
     try {
         const response = await fetch("http://83.229.84.40:2532/login", {
             method: "POST",
