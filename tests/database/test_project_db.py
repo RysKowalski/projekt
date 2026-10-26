@@ -1,13 +1,13 @@
 import os
 from database import Database, Project
-from declarations import Bitmap
+from declarations import Bitmaps
 
 
 TEST_DB_PATH: str = "test_db.sqlite"
 TEST_USERNAME: str = "username"
 TEST_PROJECT_NAME: str = "project"
 TEST_PASSWORD_HASH: str = "q1234#$"
-TEST_BITMAPS: Bitmap = {
+TEST_BITMAPS: Bitmaps = {
     "a": [
         [False, False, False],
         [True, True, True],
@@ -81,6 +81,6 @@ def test_add_get_bitmap() -> None:
     project_id: int = db.add_project(user_id, TEST_PROJECT_NAME)
 
     db.set_bitmap(project_id, TEST_BITMAPS)
-    result: Bitmap = db.get_bitmap(project_id)
+    result: Bitmaps = db.get_bitmap(project_id)
 
     assert result == TEST_BITMAPS

@@ -1,2 +1,2 @@
-Char = list[list[bool]]
-Bitmap = dict[str, Char]
+Bitmap = list[list[bool]]
+Bitmaps = dict[str, Bitmap]

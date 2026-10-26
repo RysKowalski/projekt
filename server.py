@@ -18,7 +18,7 @@ from pwdlib import PasswordHash
 from pydantic import BaseModel
 
 from database import Database, Project, User, UserInDb
-from declarations import Bitmap
+from declarations import Bitmaps
 
 load_dotenv()
 # openssl rand -hex 32
@@ -141,7 +141,7 @@ async def login_for_access_token(
 
 @api_router.post("/ttf")
 async def get_ttf(
-    font: Bitmap, _: Annotated[User, Depends(get_current_user)]
+    font: Bitmaps, _: Annotated[User, Depends(get_current_user)]
 ) -> FileResponse:
     print(font)
     return FileResponse("aria.ttf", filename="font.ttf")
@@ -198,13 +198,13 @@ def get_project(project_id: Annotated[int, Depends(get_project_id)]) -> Project 
 
 @api_router.put("/bitmaps")
 def put_bitmaps(
-    bitmaps: Bitmap,
+    bitmaps: Bitmaps,
     project_id: Annotated[int, Depends(get_project_id)],
 ) -> None:
     db.set_bitmap(project_id, bitmaps)
 
 
-def get_bitmaps(project_id: Annotated[int, Depends(get_project_id)]) -> Bitmap:
+def get_bitmaps(project_id: Annotated[int, Depends(get_project_id)]) -> Bitmaps:
     return db.get_bitmap(project_id)
 
 

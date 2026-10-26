@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from sqlite3 import Connection, Cursor
 
-from declarations import Bitmap, Char
+from declarations import Bitmaps, Bitmap
 
 
 @dataclass(frozen=True)
@@ -192,7 +192,7 @@ class ProjectDB(DatabaseBase):
 
         return Project(project_id, data[0], data[1], data[2])
 
-    def set_bitmap(self, project_id: int, bitmap: Bitmap) -> None:
+    def set_bitmap(self, project_id: int, bitmap: Bitmaps) -> None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -207,7 +207,7 @@ class ProjectDB(DatabaseBase):
                 )
             conn.commit()
 
-    def _encode_char(self, grid: Char) -> tuple[int, int, bytes]:
+    def _encode_char(self, grid: Bitmap) -> tuple[int, int, bytes]:
         size_y: int = len(grid)
         size_x: int = len(grid[0])
 
@@ -221,7 +221,7 @@ class ProjectDB(DatabaseBase):
 
         return size_x, size_y, bytes(data)
 
-    def get_bitmap(self, project_id: int) -> Bitmap:
+    def get_bitmap(self, project_id: int) -> Bitmaps:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -234,12 +234,12 @@ class ProjectDB(DatabaseBase):
                 (project_id,),
             )
 
-            bitmap: Bitmap = {}
+            bitmap: Bitmaps = {}
             for row in cursor:
                 bitmap[row[0]] = self._decode_char(row[1], row[2], row[3])
         return bitmap
 
-    def get_char(self, char_id: int) -> Char:
+    def get_char(self, char_id: int) -> Bitmap:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
@@ -261,7 +261,7 @@ class ProjectDB(DatabaseBase):
 
         return self._decode_char(size_x, size_y, data)
 
-    def _decode_char(self, size_x: int, size_y: int, data: bytes) -> Char:
+    def _decode_char(self, size_x: int, size_y: int, data: bytes) -> Bitmap:
         grid: list[list[bool]] = []
 
         i: int = 0
