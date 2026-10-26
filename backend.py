@@ -38,7 +38,6 @@ class Font:
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
     def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int) -> None:
-        print(f"x: {x}\ny:{y}")
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * self.scale
         xmax = (x + 1) * self.scale
