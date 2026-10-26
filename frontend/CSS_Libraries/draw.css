@@ -1,0 +1,22 @@
+:root {
+    --bg: #09090b;
+    --surface: #101013;
+    --border: #27272a;
+    --text: #fafafa;
+    --secondaryText: #858585;
+}
+
+main {
+    /* 100 vh - header */
+    height: 91.5vh; 
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+canvas {
+    border: 3px solid var(--border);
+    aspect-ratio: 1/1;
+    width: min(40vw, 70vh);
+}

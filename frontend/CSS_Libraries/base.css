@@ -1,0 +1,31 @@
+:root {
+    --bg: #09090b;
+    --surface: #101013;
+    --border: #27272a;
+    --text: #fafafa;
+    --secondaryText: #858585;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg);
+}
+
+header {
+    width: 100vw;
+    height: 8vh;
+
+    border-bottom: var(--border) solid 0.5vh;
+
+    display: flex;
+    align-items: center;
+}
+
+#header-icon-link {
+    height: 75%;
+    margin-left: 1vw;
+}
+
+#header-icon {
+    height: 100%;
+}

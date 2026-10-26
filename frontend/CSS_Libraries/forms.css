@@ -1,0 +1,122 @@
+/* font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #09090b;
+    --surface: #101013;
+    --border: #27272a;
+    --text: #fafafa;
+    --secondaryText: #858585;
+}
+
+section {
+    width: 100%;
+    height: 91.5vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#formBox {
+    height: 80%;
+    aspect-ratio: 1/1;
+
+    background-color: var(--bg);
+    border: solid 0.2rem var(--border);
+    border-radius: 1vw;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#formBox h1 {
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: clamp(4rem, 4vw, 6rem);
+    text-align: center;
+
+    margin-top: 4vw;
+    margin-bottom: 2vw;
+}
+
+.formInput {
+    width: 80%;
+    height: 10%;
+
+    border-bottom: solid 4px var(--border);
+
+    margin: 1vw;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.formInput img {
+    width: 10%;
+    aspect-ratio: 1/1;
+}
+
+.textInput {
+    width: 85%;
+    height: 95%;
+
+    margin-left: 5%;
+
+    background-color: var(--bg);
+    border: var(--bg);
+    outline: none;
+
+    color: var(--text);
+    font-size: 1.6rem;
+}
+
+#extras {
+    height: 5%;
+    width: 100%;
+
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    font-size: 0.8vw;
+
+    margin-top: 0vw;
+    margin-bottom: 0.5vw;
+}
+
+#extras h3 {
+    margin: 0;
+}
+
+#extras h3 a {
+    text-decoration: none;
+    color: var(--text);
+    margin: 0;
+}
+
+#submit {
+    height: 15%;
+    width: 60%;
+
+    background-color: var(--surface);
+    border: solid 4px var(--border);
+
+    margin-top: 2vw;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    text-decoration: none;
+    color: var(--text);
+    font-size: 2vw;
+    font-family: 'Inter', sans-serif;
+}
+
+#submit:hover {
+    background-color: var(--bg);
+    color: var(--secondaryText);
+}
