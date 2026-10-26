@@ -4,7 +4,7 @@ from typing import Annotated
 
 import jwt
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, APIRouter
 from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
@@ -43,9 +43,11 @@ db: Database = Database()
 
 password_hash = PasswordHash.recommended()
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/token")
 app = FastAPI()
 app.frontend("/", directory="frontend")
+
+api_router: APIRouter = APIRouter(prefix="/api")
 
 
 def verify_password(plain_password, hashed_password):
@@ -99,7 +101,7 @@ async def get_current_user(
     return user
 
 
-@app.post("/token")
+@api_router.post("/token")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
@@ -117,22 +119,15 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@app.get("/users/me/")
-async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    return current_user
-
-
-@app.post("/ttf")
-def get_ttf(
+@api_router.post("/ttf")
+async def get_ttf(
     font: Bitmap, _: Annotated[User, Depends(get_current_user)]
 ) -> FileResponse:
     print(font)
     return FileResponse("aria.ttf", filename="font.ttf")
 
 
-@app.post("/register")
+@api_router.post("/register")
 def register(data: RegisterData) -> None:
     if db.get_user(data.username) is not None:
         raise HTTPException(
@@ -140,3 +135,13 @@ def register(data: RegisterData) -> None:
         )
 
     db.add_user(data.username, get_password_hash(data.password))
+
+
+@api_router.get("/me")
+async def read_users_me(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    return current_user
+
+
+app.include_router(api_router)
