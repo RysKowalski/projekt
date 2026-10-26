@@ -97,12 +97,20 @@ section {
     margin: 0;
 }
 
+#errorMessage {
+    color: rgb(199, 22, 22);
+    font-size: 1.5vw;
+
+    margin-top: 1vw;
+}
+
 #submit {
     height: 15%;
     width: 60%;
 
     background-color: var(--surface);
     border: solid 4px var(--border);
+    border-radius: 10px;
 
     margin-top: 2vw;
 
@@ -114,9 +122,14 @@ section {
     color: var(--text);
     font-size: 2vw;
     font-family: 'Inter', sans-serif;
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.1s;
 }
 
 #submit:hover {
     background-color: var(--bg);
-    color: var(--secondaryText);
+    transform: scale(1.01);
 }

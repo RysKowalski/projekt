@@ -10,6 +10,10 @@
 <body>
     <header>
         <a href="index.html" id="header-icon-link"><img src="Images/Icons/home.png" alt="home" id="header-icon"></a>
+        <div id="toolbar">
+            <a href="login.html" class="toolbarButton">Logowanie</a>
+            <a href="register.html" class="toolbarButton">Rejestracja</a>
+        </div>
     </header>
 
     <section>
@@ -19,20 +23,23 @@
 
             <div class="formInput">
                 <img src="Images/Icons/user.png" alt="login">
-                <input type="text" placeholder="Login" class="textInput">
+                <input type="text" placeholder="Login" class="textInput" id="username">
             </div>
 
             <div class="formInput">
                 <img src="Images/Icons/keylock.png" alt="login">
-                <input type="password" placeholder="Hasło" class="textInput">
+                <input type="password" placeholder="Hasło" class="textInput" id="password">
             </div>
 
             <div id="extras">
                 <h3>Masz już konto? <a href="login.html">Zaloguj się</a></h3>
+                <h3 id="errorMessage"></h3>
             </div>
 
             <input type="submit" value="Zarejestruj się" id="submit"></input>
         </form>
     </section>
+
+    <script src="register.js"></script>
 </body>
 </html>
