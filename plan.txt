@@ -19,9 +19,40 @@ characters:
   sizey: int
   data: blob
 
+dataclass User:
+  - id
+  - username
+  - creation_date
+
+dataclass UserInDb(User):
+  - password_hash
+
+dataclass Project:
+  - id
+  - name
+  - edit_date
+  - creation_date
+
+Char = [[bool]]
+Bitmap = {name, Char}
+
+add_user(username, password) -> user_id
+delete_user(user_id)
+get_user(username) -> UserInDb | None
+
+add_project(user_id, name) -> project_id
+delete_project(project_id)
+get_project_list(user_id) -> [project_id, project_name]
+get_project(project_id) -> Project
+
+add_bitmap(project_id, Bitmap)
+get_bitmap(project_id) -> Bitmap
 
 
-frontent login register- Kuba
-generowanie ttf - Dominik
-Dostęp do bazy danych - Jerzy
-Logowanie z API - Jerzy
+
+
+
+[ ] frontent login register- Kuba
+[ ] generowanie ttf - Dominik
+[ ] dostęp do bazy danych - Jerzy
+[x] logowanie z API - Jerzy

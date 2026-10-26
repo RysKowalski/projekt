@@ -34,6 +34,11 @@ class TokenData(BaseModel):
     username: str
 
 
+class RegisterData(BaseModel):
+    username: str
+    password: str
+
+
 db: Database = Database()
 
 password_hash = PasswordHash.recommended()
@@ -128,10 +133,10 @@ def get_ttf(
 
 
 @app.post("/register")
-def register(username: str, password: str) -> None:
-    if db.get_user(username) is not None:
+def register(data: RegisterData) -> None:
+    if db.get_user(data.username) is not None:
         raise HTTPException(
-            status.HTTP_409_CONFLICT, f"user '{username}' already exists"
+            status.HTTP_409_CONFLICT, f"user '{data.username}' already exists"
         )
 
-    db.add_user(username, get_password_hash(password))
+    db.add_user(data.username, get_password_hash(data.password))
