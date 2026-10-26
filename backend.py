@@ -5,19 +5,10 @@ from declarations import Char, Bitmap
 
 
 class Font:
-    def __init__(self, 
-                 bitmaps: Bitmap, 
-                 scale=100,
-                 baseline_from_bottom=0, 
-                 unit_per_em=1000
-                 ):
-    
-        self.update_variables(bitmaps, scale, baseline_from_bottom, unit_per_em)
-        
     def update_variables(self, 
-                 bitmaps: Bitmap, 
-                 scale=100,
+                 bitmaps: Bitmap,
                  baseline_from_bottom=0, 
+                 scale=100,
                  unit_per_em=1000
                  ):
     
@@ -62,19 +53,20 @@ class Font:
         pen.lineTo((xmin, ymax))
         pen.closePath()
     
-    def bitmap_to_glyph(self) -> Glyph:
-        width: int = len(self.bitmap[0])
+    def bitmap_to_glyph(self, bitmap) -> Glyph:
+        width: int = len(bitmap[0])
 
         pen: TTGlyphPen = TTGlyphPen(None)
 
         for y in range(self.height):
             for x in range(width):
-                if self.bitmap[y][x]:
+                if bitmap[y][x]:
                     self.pixel_to_square(pen, x, y)
 
         return pen.glyph()
 
-    def create_font(self, name: str, output_path: str) -> None: # none = void
+    def create_font(self, bitmaps: Bitmap, name: str, output_path: str, baseline: int=0) -> None: # none = void
+        self.update_variables(bitmaps, baseline)
         # units per em is how many 
         fb = FontBuilder(self.unit_per_em, isTTF=True) 
 
@@ -92,7 +84,7 @@ class Font:
 
         for char_name, bitmap in self.bitmaps.items():
             
-            glyphs[char_name] = self.bitmap_to_glyph()
+            glyphs[char_name] = self.bitmap_to_glyph(bitmap)
 
             width = len(bitmap[0])
 
@@ -120,11 +112,11 @@ class Font:
 
 
         fb.setupNameTable({
-            'familyName': self.name,
+            'familyName': name,
             'styleName': 'Regular', # it has to be regular otherwise it crashes
-            'fullName': self.name,
-            'psName': self.name.replace(" ", ""),
-            'uniqueFontIdentifier': self.name
+            'fullName': name,
+            'psName': name.replace(" ", ""),
+            'uniqueFontIdentifier': name
         })
 
         # this setups font 
@@ -163,5 +155,6 @@ if __name__ == '__main__':
 
     }
 
-    my_font = Font(bitmaps=bitmaps, name="font")
-    my_font.create_font("please_for_the_love_of_god_or_whoever_is_in_charge_of_the_universe_work.ttf")
+    font = Font()
+    font.create_font(bitmaps, "font", "please_for_the_love_of_god_or_whoever_is_in_charge_of_the_universe_work.ttf")
+    
