@@ -1,22 +1,8 @@
-import sqlite3
-from collections.abc import Generator
-from contextlib import contextmanager
 from dataclasses import dataclass
-from sqlite3 import Connection, Cursor
+from sqlite3 import Cursor
 
 from declarations import Bitmaps, Bitmap
-
-
-@dataclass(frozen=True)
-class User:
-    id: int
-    username: str
-    creation_date: str
-
-
-@dataclass(frozen=True)
-class UserInDb(User):
-    password_hash: str
+from .base import DatabaseBase
 
 
 @dataclass(frozen=True)
@@ -25,110 +11,6 @@ class Project:
     name: str
     edit_date: str
     creation_date: str
-
-
-class DatabaseBase:
-    def __init__(self, db_path: str = "database.sqlite") -> None:
-        self.db_path: str = db_path
-        self.create_tables()
-
-    @contextmanager
-    def _connect(self) -> Generator[Connection]:
-        conn: Connection = sqlite3.connect(self.db_path)
-        try:
-            conn.execute("PRAGMA foreign_keys = ON")
-            yield conn
-        except Exception:
-            conn.rollback()
-            raise
-        finally:
-            conn.close()
-
-    def create_tables(self) -> None:
-        with self._connect() as conn:
-            cursor: Cursor = conn.cursor()
-
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    password_hash TEXT NOT NULL,
-                    name TEXT UNIQUE NOT NULL,
-                    created DATE NOT NULL DEFAULT CURRENT_TIME
-                );
-            """)
-
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS projects (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
-                    user_id INTEGER NOT NULL,
-                    edited DATE NOT NULL DEFAULT CURRENT_TIME,
-                    created DATE NOT NULL DEFAULT CURRENT_TIME,
-                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-                );
-            """)
-
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS characters (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    project_id INTEGER NOT NULL,
-                    name CHAR(1) NOT NULL,
-                    sizex INTEGER NOT NULL,
-                    sizey INTEGER NOT NULL,
-                    bitmap BLOB NOT NULL,
-                    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
-                );
-            """)
-
-            conn.commit()
-
-
-class UserDB(DatabaseBase):
-    def get_user(self, username: str) -> UserInDb | None:
-        with self._connect() as conn:
-            cursor: Cursor = conn.cursor()
-
-            cursor.execute(
-                """
-                SELECT id, name, created, password_hash FROM users WHERE name=?;
-            """,
-                (username,),
-            )
-
-            result = cursor.fetchone()
-        if result is None:
-            return
-
-        return UserInDb(result[0], result[1], result[2], result[3])
-
-    def add_user(self, username: str, password_hash: str) -> int:
-        with self._connect() as conn:
-            cursor: Cursor = conn.cursor()
-
-            cursor.execute(
-                """
-                INSERT INTO users (password_hash, name) VALUES (?, ?)
-                """,
-                (password_hash, username),
-            )
-            id: int | None = cursor.lastrowid
-            conn.commit()
-        if not id:
-            return -1
-        return id
-
-    def delete_user(self, user_id: int) -> None:
-        with self._connect() as conn:
-            cursor: Cursor = conn.cursor()
-
-            cursor.execute(
-                """
-                DELETE FROM users WHERE id=?
-            """,
-                (user_id,),
-            )
-
-            conn.commit()
 
 
 class ProjectDB(DatabaseBase):
@@ -278,6 +160,3 @@ class ProjectDB(DatabaseBase):
             grid.append(row)
 
         return grid
-
-
-class Database(UserDB, ProjectDB): ...
