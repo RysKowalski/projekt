@@ -12,4 +12,8 @@ def is_password_correct(password:str, hashed_password:str) -> bool:
 class Cypher:
     def encrypt(text: str):
         pass
+    def decrypt(text: str):
+        pass
+    def get_key():
+        pass
 
