@@ -1,3 +1,4 @@
+from io import BytesIO
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
@@ -8,15 +9,16 @@ from fastapi import (
     Depends,
     FastAPI,
     HTTPException,
+    Response,
     status,
     APIRouter,
 )
-from fastapi.responses import FileResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 
+from backend import Font
 from database import Database, Project, User, UserInDb
 from declarations import Bitmaps
 
@@ -44,6 +46,7 @@ class RegisterData(BaseModel):
     password: str
 
 
+fontMaker: Font = Font()
 db: Database = Database()
 
 password_hash = PasswordHash.recommended()
@@ -141,10 +144,20 @@ async def login_for_access_token(
 
 @api_router.post("/ttf")
 async def get_ttf(
-    font: Bitmaps, _: Annotated[User, Depends(get_current_user)]
-) -> FileResponse:
-    print(font)
-    return FileResponse("aria.ttf", filename="font.ttf")
+    project_id: Annotated[int, Depends(get_project_id)],
+) -> Response:
+    project: Project | None = db.get_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    font: BytesIO = fontMaker.create_font(db.get_bitmap(project_id), project.name)
+    return Response(
+        content=font.getvalue(),
+        media_type="font/ttf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{project.name}.ttf"',
+        },
+    )
 
 
 @api_router.post("/register")
@@ -204,6 +217,7 @@ def put_bitmaps(
     db.set_bitmap(project_id, bitmaps)
 
 
+@api_router.get("/bitmaps")
 def get_bitmaps(project_id: Annotated[int, Depends(get_project_id)]) -> Bitmaps:
     return db.get_bitmap(project_id)
 

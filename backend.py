@@ -1,7 +1,8 @@
-from dataclasses import dataclass
+from io import BytesIO
+
 from fontTools.pens.ttGlyphPen import TTGlyphPen, Glyph
 from fontTools.fontBuilder import FontBuilder
-from declarations import Bitmap, Bitmaps
+from declarations import Bitmaps
 
 
 class Font:
@@ -12,7 +13,7 @@ class Font:
         self.scale = scale
 
         # every glyph should be the same height!
-        self.height = len(list(bitmaps.values())[0])
+        self.height: int = len(list(bitmaps.values())[0])
 
         # unit per em is canvas for a glyph. it most often should sum to 1000 or 2048
         # it is used for nice scaling so when user selects 6px font it scales to it
@@ -57,9 +58,7 @@ class Font:
 
         return pen.glyph()
 
-    def create_font(
-        self, bitmaps: Bitmaps, name: str, output_path: str, baseline: int = 0
-    ) -> None:  # none = void
+    def create_font(self, bitmaps: Bitmaps, name: str, baseline: int = 0) -> BytesIO:
         self.update_variables(bitmaps, baseline)
         # units per em is how many
         fb = FontBuilder(self.unit_per_em, isTTF=True)
@@ -76,7 +75,9 @@ class Font:
         # cmap is dict of unicode codes mapped with characters which are keys for bitmaps
         cmap = {}
 
+        print("\ngenerating: ")
         for char_name, bitmap in self.bitmaps.items():
+            print(char_name)
             glyphs[char_name] = self.bitmap_to_glyph(bitmap)
 
             width = len(bitmap[0])
@@ -120,31 +121,24 @@ class Font:
         # this setups font
         fb.setupPost()
 
-        fb.save(output_path)
+        file: BytesIO = BytesIO()
+        fb.save(file)
+        return file
 
 
 if __name__ == "__main__":
-    char_A = [
-        [False, True, True, True, False],
-        [True, False, False, False, True],
-        [True, True, True, True, True],
-        [True, False, False, False, True],
-        [True, False, False, False, True],
-    ]
+    f: Font = Font()
 
-    char_B = [
-        [True, True, True, False, False],
-        [True, False, False, True, False],
-        [True, False, True, False, False],
-        [True, False, False, True, False],
-        [True, True, True, False, False],
-    ]
+    bitmaps: Bitmaps = {}
+    alphabet = "abcdefghijklmnoprstuwxyz"
 
-    bitmaps = {"A": char_A, "B": char_B, "a": char_A, "b": char_B}
+    for c in alphabet:
+        print(c)
+        bitmaps[c] = [[True for _ in range(100)] for _ in range(100)]
+    for c in alphabet:
+        print(c.capitalize())
+        bitmaps[c.capitalize()] = [[False for _ in range(100)] for _ in range(100)]
 
-    font = Font()
-    font.create_font(
-        bitmaps,
-        "font",
-        "please_for_the_love_of_god_or_whoever_is_in_charge_of_the_universe_work.ttf",
-    )
+    with open("test.ttf", "wb") as file:
+        g = f.create_font(bitmaps, "test")
+        file.write(g.getvalue())
