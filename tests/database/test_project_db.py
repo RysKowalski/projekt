@@ -47,7 +47,7 @@ def test_add_get_project() -> None:
     assert project is not None
     assert project.name == TEST_PROJECT_NAME
     assert project.id == project_id
-    assert project.creation_date == project.edit_date
+    assert project.created == project.edited
 
 
 def test_delete_project() -> None:

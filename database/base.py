@@ -1,6 +1,7 @@
 import sqlite3
 from collections.abc import Generator
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from sqlite3 import Connection, Cursor
 
 
@@ -24,13 +25,14 @@ class DatabaseBase:
     def create_tables(self) -> None:
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
-
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     password_hash TEXT NOT NULL,
                     name TEXT UNIQUE NOT NULL,
-                    created DATE NOT NULL DEFAULT CURRENT_TIME
+                    created DATETIME NOT NULL DEFAULT (
+                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                    )
                 );
             """)
 
@@ -39,8 +41,12 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     user_id INTEGER NOT NULL,
-                    edited DATE NOT NULL DEFAULT CURRENT_TIME,
-                    created DATE NOT NULL DEFAULT CURRENT_TIME,
+                    edited DATETIME NOT NULL DEFAULT (
+                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                    ),
+                    created DATETIME NOT NULL DEFAULT (
+                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+                    ),
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
@@ -58,3 +64,11 @@ class DatabaseBase:
             """)
 
             conn.commit()
+
+    @staticmethod
+    def _to_sqlite_date(value: datetime) -> str:
+        return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    @staticmethod
+    def _from_sqlite_date(value: str) -> datetime:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))

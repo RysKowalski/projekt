@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from sqlite3 import Cursor
 
 from declarations import Bitmaps, Bitmap
@@ -9,8 +10,8 @@ from .base import DatabaseBase
 class Project:
     id: int
     name: str
-    edit_date: str
-    creation_date: str
+    edited: datetime
+    created: datetime
 
 
 class ProjectDB(DatabaseBase):
@@ -72,7 +73,12 @@ class ProjectDB(DatabaseBase):
         if data is None:
             return
 
-        return Project(project_id, data[0], data[1], data[2])
+        return Project(
+            project_id,
+            data[0],
+            self._from_sqlite_date(data[1]),
+            self._from_sqlite_date(data[2]),
+        )
 
     def set_bitmap(self, project_id: int, bitmap: Bitmaps) -> None:
         with self._connect() as conn:
