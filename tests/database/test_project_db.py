@@ -9,11 +9,11 @@ TEST_PROJECT_NAME: str = "project"
 TEST_PASSWORD_HASH: str = "q1234#$"
 TEST_BITMAPS: Bitmaps = {
     "a": [
-        [False, False, False],
-        [True, True, True],
-        [False, False, False],
+        [(False, 3)],
+        [(True, 3)],
+        [(False, 3)],
     ],
-    "b": [[True, True], [False, False], [True, True]],
+    "b": [[(True, 2)], [(False, 2)], [(True, 2)]],
 }
 
 

@@ -1,3 +1,4 @@
+import struct
 from dataclasses import dataclass
 from datetime import datetime
 from sqlite3 import Cursor
@@ -85,29 +86,15 @@ class ProjectDB(DatabaseBase):
             cursor: Cursor = conn.cursor()
 
             for name, char in bitmap.items():
-                size_x, size_y, data = self._encode_char(char)
+                data = self._encode_char(char)
                 cursor.execute(
                     """
-                    INSERT INTO characters (project_id, name, sizex, sizey, bitmap)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO characters (project_id, name, bitmap)
+                    VALUES (?, ?, ?)
                 """,
-                    (project_id, name, size_x, size_y, data),
+                    (project_id, name, data),
                 )
             conn.commit()
-
-    def _encode_char(self, grid: Bitmap) -> tuple[int, int, bytes]:
-        size_y: int = len(grid)
-        size_x: int = len(grid[0])
-
-        data: bytearray = bytearray((size_x * size_y + 7) // 8)
-
-        for y, row in enumerate(grid):
-            for x, value in enumerate(row):
-                if value:
-                    index: int = y * size_x + x
-                    data[index // 8] |= 1 << (index % 8)
-
-        return size_x, size_y, bytes(data)
 
     def get_bitmap(self, project_id: int) -> Bitmaps:
         with self._connect() as conn:
@@ -115,7 +102,7 @@ class ProjectDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT name, sizex, sizey, bitmap
+                SELECT name, bitmap
                 FROM characters
                 WHERE project_id=?
             """,
@@ -124,7 +111,7 @@ class ProjectDB(DatabaseBase):
 
             bitmap: Bitmaps = {}
             for row in cursor:
-                bitmap[row[0]] = self._decode_char(row[1], row[2], row[3])
+                bitmap[row[0]] = self._decode_char(row[1])
         return bitmap
 
     def get_char(self, char_id: int) -> Bitmap:
@@ -133,8 +120,8 @@ class ProjectDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT sizex, sizey, bitmap FROM characters WHERE id=?
-            """,
+                SELECT bitmap FROM characters WHERE id=?
+                """,
                 (char_id,),
             )
             result = cursor.fetchone()
@@ -142,27 +129,57 @@ class ProjectDB(DatabaseBase):
         if not result:
             return []
 
-        size_x: int
-        size_y: int
-        data: bytes
-        size_x, size_y, data = result
+        data: bytes = result[0]
 
-        return self._decode_char(size_x, size_y, data)
+        return self._decode_char(data)
 
-    def _decode_char(self, size_x: int, size_y: int, data: bytes) -> Bitmap:
-        grid: list[list[bool]] = []
+    @staticmethod
+    def _encode_char(bitmap: Bitmap) -> bytes:
+        """Encode an RLE bitmap into binary data."""
+        data = bytearray()
 
-        i: int = 0
-        for _ in range(size_y):
-            row: list[bool] = []
-            for _ in range(size_x):
-                byte_index: int = i // 8
-                bit_position: int = i % 8
-                mask: int = 1 << bit_position
-                bit: bool = bool(data[byte_index] & mask)
+        data.extend(struct.pack("<I", len(bitmap)))
 
-                row.append(bit)
-                i += 1
-            grid.append(row)
+        for row in bitmap:
+            data.extend(struct.pack("<I", len(row)))
 
-        return grid
+            for value, count in row:
+                data.extend(struct.pack("<BI", value, count))
+
+        return bytes(data)
+
+    @staticmethod
+    def _decode_char(data: bytes) -> Bitmap:
+        """Decode binary RLE data into a bitmap."""
+        offset: int = 0
+
+        def read(fmt: str) -> tuple:
+            nonlocal offset
+
+            size: int = struct.calcsize(fmt)
+
+            if offset + size > len(data):
+                raise ValueError("Invalid bitmap data")
+
+            result: tuple = struct.unpack_from(fmt, data, offset)
+            offset += size
+
+            return result
+
+        rows: int = read("<I")[0]
+        bitmap: Bitmap = []
+
+        for _ in range(rows):
+            runs: int = read("<I")[0]
+            row: list[tuple[bool, int]] = []
+
+            for _ in range(runs):
+                value, count = read("<BI")
+                row.append((bool(value), count))
+
+            bitmap.append(row)
+
+        if offset != len(data):
+            raise ValueError("Unexpected trailing bitmap data")
+
+        return bitmap

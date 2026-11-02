@@ -56,8 +56,6 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     project_id INTEGER NOT NULL,
                     name CHAR(1) NOT NULL,
-                    sizex INTEGER NOT NULL,
-                    sizey INTEGER NOT NULL,
                     bitmap BLOB NOT NULL,
                     FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
                 );
