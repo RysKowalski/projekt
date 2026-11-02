@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from sqlite3 import Cursor
 
 from .base import DatabaseBase
@@ -8,7 +9,7 @@ from .base import DatabaseBase
 class User:
     id: int
     username: str
-    creation_date: str
+    created: datetime
 
 
 @dataclass(frozen=True)
@@ -32,7 +33,9 @@ class UserDB(DatabaseBase):
         if result is None:
             return
 
-        return UserInDb(result[0], result[1], result[2], result[3])
+        return UserInDb(
+            result[0], result[1], self._from_sqlite_date(result[2]), result[3]
+        )
 
     def add_user(self, username: str, password_hash: str) -> int:
         with self._connect() as conn:
@@ -57,7 +60,7 @@ class UserDB(DatabaseBase):
             cursor.execute(
                 """
                 DELETE FROM users WHERE id=?
-            """,
+                """,
                 (user_id,),
             )
 
