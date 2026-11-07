@@ -3,7 +3,7 @@ import hashlib
 
 
 class Encryption:
-    def __init__(key=None):
+    def __init__(key:str=None):
         pass
     def encrypt(text: str):
         pass
