@@ -174,8 +174,7 @@ class Font_new:
 
         for y in range(self.height):
             for x in range(width):
-                if bitmap[y][x]:
-                    self.pixel_to_square(pen, x, y)
+                self.pixel_to_square(pen, x,y,)
 
         return pen.glyph()
 
