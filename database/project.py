@@ -57,7 +57,7 @@ class ProjectDB(DatabaseBase):
             data: list[tuple[int, bytes]] = cursor.fetchall().copy()
         decrypted: list[tuple[int, str]] = []
         for id, name in data:
-            decrypted.append((id, self.enc.decrypt(name).decode()))
+            decrypted.append((id, self.enc.decrypt_str(name)))
 
         return decrypted
 
@@ -82,7 +82,7 @@ class ProjectDB(DatabaseBase):
 
         return Project(
             project_id,
-            self.enc.decrypt(name).decode(),
+            self.enc.decrypt_str(name),
             self._from_sqlite_date(edited),
             self._from_sqlite_date(created),
         )

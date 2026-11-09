@@ -13,18 +13,5 @@ class Encryption:
     def decrypt(self, data: bytes) -> bytes:
         return self.fernet.decrypt(data)
 
-
-if __name__ == "__main__":
-    enc = Encryption("Ilx4oRhvR_gzjImgLZAZlrGOiNA8rPmYgn1FpLXcnl0=")
-
-    s = "string"
-    b = "bytes".encode()
-    print(f"string={s}, bytes={b}")
-
-    es = enc.encrypt(s)
-    eb = enc.encrypt(b)
-    print(f"encString={es}, encBytes={eb}")
-
-    ds = enc.decrypt(es).decode()
-    db = enc.decrypt(eb)
-    print(f"decString={ds}, decBytes={db}")
+    def decrypt_str(self, data: bytes) -> str:
+        return self.decrypt(data).decode()
