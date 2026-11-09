@@ -46,7 +46,7 @@ class DatabaseBase:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS projects (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
+                    name BLOB NOT NULL,
                     user_id INTEGER NOT NULL,
                     edited DATETIME NOT NULL DEFAULT (
                         strftime('%Y-%m-%dT%H:%M:%fZ', 'now')

@@ -26,7 +26,7 @@ class UserDB(DatabaseBase):
                 """
                 SELECT id, created, password_hash FROM users WHERE name=?;
             """,
-                (self.enc.encrypt_s(username),),
+                (username,),
             )
 
             result = cursor.fetchone()
@@ -45,7 +45,7 @@ class UserDB(DatabaseBase):
                 """
                 INSERT INTO users (password_hash, name) VALUES (?, ?)
                 """,
-                (password_hash, self.enc.encrypt_s(username)),
+                (password_hash, username),
             )
             id: int | None = cursor.lastrowid
             conn.commit()

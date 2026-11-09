@@ -24,7 +24,7 @@ class ProjectDB(DatabaseBase):
                 """
                 INSERT INTO projects (name, user_id) VALUES (?, ?)
             """,
-                (name, user_id),
+                (self.enc.encrypt(name), user_id),
             )
 
             id: int | None = cursor.lastrowid
@@ -54,8 +54,9 @@ class ProjectDB(DatabaseBase):
                 (user_id,),
             )
 
-            data = cursor.fetchall()
-        return data.copy()
+            data: list[tuple[int, str]] = cursor.fetchall().copy()
+        for p in data:
+            p[1] = self.enc.decrypt(p[1]).decode()
 
     def get_project(self, project_id: int) -> Project | None:
         with self._connect() as conn:
@@ -74,11 +75,13 @@ class ProjectDB(DatabaseBase):
         if data is None:
             return
 
+        name, edited, created = data
+
         return Project(
             project_id,
-            data[0],
-            self._from_sqlite_date(data[1]),
-            self._from_sqlite_date(data[2]),
+            self.enc.decrypt(name).decode(),
+            self._from_sqlite_date(edited),
+            self._from_sqlite_date(created),
         )
 
     def set_bitmap(self, project_id: int, bitmap: Bitmaps) -> None:
@@ -87,12 +90,13 @@ class ProjectDB(DatabaseBase):
 
             for name, char in bitmap.items():
                 data = self._encode_char(char)
+                encrypted_data = self.enc.encrypt(data)
                 cursor.execute(
                     """
                     INSERT INTO characters (project_id, name, bitmap)
                     VALUES (?, ?, ?)
                 """,
-                    (project_id, name, data),
+                    (project_id, name, encrypted_data),
                 )
             conn.commit()
 
@@ -110,8 +114,8 @@ class ProjectDB(DatabaseBase):
             )
 
             bitmap: Bitmaps = {}
-            for row in cursor:
-                bitmap[row[0]] = self._decode_char(row[1])
+            for name, data in cursor:
+                bitmap[name] = self._decode_char(self.enc.decrypt(data))
         return bitmap
 
     def get_char(self, char_id: int) -> Bitmap:
@@ -131,7 +135,7 @@ class ProjectDB(DatabaseBase):
 
         data: bytes = result[0]
 
-        return self._decode_char(data)
+        return self._decode_char(self.enc.decrypt(data))
 
     @staticmethod
     def _encode_char(bitmap: Bitmap) -> bytes:
