@@ -1,0 +1,49 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root {
+    --bg: #09090b;
+    --surface: #101013;
+    --border: #27272a;
+    --text: #fafafa;
+    --secondaryText: #858585;
+}
+
+main {
+    height: 92vh;
+    width: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+section {
+    width: 95%;
+    height: 85%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5%;
+}
+
+#toolbox, #other {
+    height: 100%;
+    width: 8%;
+    flex: 0, 0 0;
+    min-width: 0;
+
+    border: 3px solid var(--border);
+    border-radius: 0.5vw;
+}
+
+canvas {
+    height: 100%;
+    width: auto;
+    max-width: 60vw;
+
+    border: 3px solid var(--border);
+    border-radius: 1vw;
+
+    flex: 0 1 auto;
+}
