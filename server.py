@@ -22,15 +22,6 @@ from backend import Font
 from database import Database, Project, User, UserInDb
 from declarations import Bitmaps
 
-load_dotenv()
-# openssl rand -hex 32
-SECRET_KEY: str | None = os.getenv("SECRET_KEY")
-if SECRET_KEY is None:
-    raise LookupError('environment variable "SECRET_KEY" is not present')
-
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 
 class Token(BaseModel):
     access_token: str
@@ -44,6 +35,16 @@ class TokenData(BaseModel):
 class RegisterData(BaseModel):
     username: str
     password: str
+
+
+load_dotenv()
+# openssl rand -hex 32
+SECRET_KEY: str | None = os.getenv("SECRET_KEY")
+if SECRET_KEY is None:
+    raise LookupError('environment variable "SECRET_KEY" is not present')
+
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 
 fontMaker: Font = Font()

@@ -1,21 +1,9 @@
-import hashlib
-
-
-
 class Encryption:
-    def __init__(key=None):
-        pass
-    def encrypt(text: str):
-        pass
-    def decrypt(text: str):
-        pass
-    def get_key():
-        pass
+    def __init__(self, key: str | None = None):
+        self.key: str | None = key
 
-    @staticmethod
-    def hash(password:str):
-        # .encode() turns string into bytes
-        # .hexdigest() turns bytes to text in hexadecimal systen
-        return hashlib.sha256(password.encode()).hexdigest()
+    def encrypt_b(self, data: bytes):
+        return data
 
-
+    def decrypt_b(self, data: bytes):
+        return data

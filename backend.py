@@ -134,10 +134,10 @@ if __name__ == "__main__":
 
     for c in alphabet:
         print(c)
-        bitmaps[c] = [[True for _ in range(100)] for _ in range(100)]
+        bitmaps[c] = [[(True, 1000)] for _ in range(1000)]
     for c in alphabet:
         print(c.capitalize())
-        bitmaps[c.capitalize()] = [[False for _ in range(100)] for _ in range(100)]
+        bitmaps[c.capitalize()] = [[(False, 1000)] for _ in range(1000)]
 
     with open("test.ttf", "wb") as file:
         g = f.create_font(bitmaps, "test")
