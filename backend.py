@@ -2,7 +2,7 @@ from io import BytesIO
 
 from fontTools.pens.ttGlyphPen import TTGlyphPen, Glyph
 from fontTools.fontBuilder import FontBuilder
-from declarations import Bitmaps
+from declarations import Bitmaps, Bitmap
 
 
 class Font:
@@ -14,6 +14,7 @@ class Font:
 
         # every glyph should be the same height!
         self.height: int = len(list(bitmaps.values())[0])
+        # ^ it is written like this because we work with bitmapS not bitmap. 
 
         # unit per em is canvas for a glyph. it most often should sum to 1000 or 2048
         # it is used for nice scaling so when user selects 6px font it scales to it
@@ -133,3 +134,29 @@ class Font:
         return file
 
 
+    @staticmethod
+    def optimize_bitmap(bitmap): # it will be done on front end but this function can be used for tests here
+        optimized_bitmap = []
+        for row in bitmap:
+            optimized_row = []
+            current_state = row[0]
+            amount = 1
+            for state in row[1:]: # we cut the first value since it is taken as a state
+                if (current_state == state):
+                    amount += 1
+                else:
+                    optimized_row.append((current_state, amount))
+                    current_state = state
+                    amount = 1
+
+            optimized_row.append((current_state, amount))
+            optimized_bitmap.append(optimized_row)
+        return optimized_bitmap
+                    
+
+character = [
+    [False, True, False, False, False],
+    [True, True, True, False, False]
+]
+
+print(Font.optimize_bitmap(character))
