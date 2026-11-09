@@ -2,11 +2,19 @@ import os
 from datetime import datetime, timezone, timedelta
 
 from database import DatabaseBase
+from encryption import Encryption
+
+
+class DBTest(DatabaseBase):
+    e = Encryption()
+
+    def __init__(self, db_path: str) -> None:
+        super().__init__(self.e, db_path)
 
 
 def test_creates_db() -> None:
     TEST_DB_PATH: str = "test_db.sqlite"
-    _ = DatabaseBase(TEST_DB_PATH)
+    _ = DBTest(TEST_DB_PATH)
 
     assert os.path.exists(TEST_DB_PATH)
     os.remove(TEST_DB_PATH)
