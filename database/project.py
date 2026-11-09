@@ -54,9 +54,12 @@ class ProjectDB(DatabaseBase):
                 (user_id,),
             )
 
-            data: list[tuple[int, str]] = cursor.fetchall().copy()
-        for p in data:
-            p[1] = self.enc.decrypt(p[1]).decode()
+            data: list[tuple[int, bytes]] = cursor.fetchall().copy()
+        decrypted: list[tuple[int, str]] = []
+        for id, name in data:
+            decrypted.append((id, self.enc.decrypt(name).decode()))
+
+        return decrypted
 
     def get_project(self, project_id: int) -> Project | None:
         with self._connect() as conn:
