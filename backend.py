@@ -152,7 +152,7 @@ class Font_new:
         self.bitmaps: Bitmaps = bitmaps
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int, amount: int) -> None:
+    def pixels_to_square(self, pen: TTGlyphPen, x: int, y: int, amount: int) -> None:
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * self.scale
         xmax = (x + amount) * self.scale
@@ -173,8 +173,16 @@ class Font_new:
         pen: TTGlyphPen = TTGlyphPen(None)
 
         for y in range(self.height):
-            for x in range(width):
-                self.pixel_to_square(pen, x,y,)
+            x = 0
+
+            while x < width:
+                state = bitmap[y][x][0]
+                amount = bitmap[y][x][1]
+
+                if (state):
+                    self.pixels_to_square(pen, x, y, amount)
+
+                x += amount 
 
         return pen.glyph()
 
