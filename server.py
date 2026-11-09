@@ -1,17 +1,17 @@
-from io import BytesIO
 import os
 from datetime import datetime, timedelta, timezone
+from io import BytesIO
 from typing import Annotated
 
 import jwt
 from dotenv import load_dotenv
 from fastapi import (
+    APIRouter,
     Depends,
     FastAPI,
     HTTPException,
     Response,
     status,
-    APIRouter,
 )
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from backend import Font
 from database import Database, Project, User, UserInDb
 from declarations import Bitmaps
+from encryption import Encryption
 
 
 class Token(BaseModel):
@@ -39,16 +40,23 @@ class RegisterData(BaseModel):
 
 load_dotenv()
 # openssl rand -hex 32
-SECRET_KEY: str | None = os.getenv("SECRET_KEY")
-if SECRET_KEY is None:
-    raise LookupError('environment variable "SECRET_KEY" is not present')
+HASHING_KEY: str | None = os.getenv("HASHING_KEY")
+if HASHING_KEY is None:
+    raise LookupError('environment variable "HASHING_KEY" is not present')
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
+# from cryptography.fernet import Fernet
+# Fernet.generate_key()
+ENCRYPTION_KEY: str | None = os.getenv("ENCRYPTION_KEY")
+if ENCRYPTION_KEY is None:
+    raise LookupError('environment variable "ENCRYPTION_KEY" is not present')
+
+encryption: Encryption = Encryption(ENCRYPTION_KEY)
+db: Database = Database(encryption)
 
 fontMaker: Font = Font()
-db: Database = Database()
 
 password_hash = PasswordHash.recommended()
 
@@ -83,7 +91,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode, HASHING_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
@@ -97,7 +105,7 @@ async def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, HASHING_KEY, algorithms=[ALGORITHM])
         username = payload.get("sub")
 
         if username is None:

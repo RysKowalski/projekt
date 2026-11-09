@@ -1,14 +1,17 @@
 import os
 from database import UserDB, UserInDb
+from encryption import Encryption
 
 
 TEST_DB_PATH: str = "test_db.sqlite"
 
 
 class TestUserDB(UserDB):
+    e = Encryption()
+
     def __init__(self, db_path: str = TEST_DB_PATH) -> None:
         self.__del__()
-        super().__init__(db_path)
+        super().__init__(self.e, db_path)
 
     def __del__(self) -> None:
         try:

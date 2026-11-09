@@ -3,10 +3,17 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timezone
 from sqlite3 import Connection, Cursor
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from encryption import Encryption
 
 
 class DatabaseBase:
-    def __init__(self, db_path: str = "database.sqlite") -> None:
+    def __init__(
+        self, encryption: "Encryption", db_path: str = "database.sqlite"
+    ) -> None:
+        self.enc: "Encryption" = encryption
         self.db_path: str = db_path
         self.create_tables()
 
@@ -39,7 +46,7 @@ class DatabaseBase:
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS projects (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL,
+                    name BLOB NOT NULL,
                     user_id INTEGER NOT NULL,
                     edited DATETIME NOT NULL DEFAULT (
                         strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
