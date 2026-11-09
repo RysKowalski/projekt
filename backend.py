@@ -5,7 +5,7 @@ from fontTools.fontBuilder import FontBuilder
 from declarations import Bitmaps
 
 
-class Font_old:
+class Font:
     def update_variables(
         self, bitmaps: Bitmaps, baseline_from_bottom=0, scale=100, unit_per_em=1000
     ):
@@ -126,7 +126,7 @@ class Font_old:
         return file
 
 
-class Font:
+class Font_new:
     def update_variables(
         self, bitmaps: Bitmaps, baseline_from_bottom=0, scale=100, unit_per_em=1000
     ):
@@ -152,10 +152,10 @@ class Font:
         self.bitmaps: Bitmaps = bitmaps
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int) -> None:
+    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int, amount: int) -> None:
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * self.scale
-        xmax = (x + 1) * self.scale
+        xmax = (x + amount) * self.scale
         ymin = (self.baseline - 1 - y) * self.scale
         ymax = (self.baseline - y) * self.scale
 
