@@ -1,26 +1,29 @@
 import os
 from database import Database, Project
-from declarations import Bitmap
+from declarations import Bitmaps
+from encryption import Encryption
 
 
 TEST_DB_PATH: str = "test_db.sqlite"
 TEST_USERNAME: str = "username"
 TEST_PROJECT_NAME: str = "project"
 TEST_PASSWORD_HASH: str = "q1234#$"
-TEST_BITMAPS: Bitmap = {
+TEST_BITMAPS: Bitmaps = {
     "a": [
-        [False, False, False],
-        [True, True, True],
-        [False, False, False],
+        [(False, 3)],
+        [(True, 3)],
+        [(False, 3)],
     ],
-    "b": [[True, True], [False, False], [True, True]],
+    "b": [[(True, 2)], [(False, 2)], [(True, 2)]],
 }
 
 
 class TestDatabase(Database):
+    e = Encryption()
+
     def __init__(self, db_path: str = TEST_DB_PATH) -> None:
         self.__del__()
-        super().__init__(db_path)
+        super().__init__(self.e, db_path)
 
     def __del__(self) -> None:
         try:
@@ -47,7 +50,7 @@ def test_add_get_project() -> None:
     assert project is not None
     assert project.name == TEST_PROJECT_NAME
     assert project.id == project_id
-    assert project.creation_date == project.edit_date
+    assert project.created == project.edited
 
 
 def test_delete_project() -> None:
@@ -80,7 +83,7 @@ def test_add_get_bitmap() -> None:
     user_id: int = db.add_user(TEST_USERNAME, TEST_PASSWORD_HASH)
     project_id: int = db.add_project(user_id, TEST_PROJECT_NAME)
 
-    db.add_bitmap(project_id, TEST_BITMAPS)
-    result: Bitmap = db.get_bitmap(project_id)
+    db.set_bitmap(project_id, TEST_BITMAPS)
+    result: Bitmaps = db.get_bitmap(project_id)
 
     assert result == TEST_BITMAPS
