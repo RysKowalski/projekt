@@ -37,7 +37,9 @@ class UserDB(DatabaseBase):
 
         id, created, password_hash = result
 
-        return UserInDb(id, self._from_sqlite_date(created), password_hash)
+        return UserInDb(
+            id, self._from_sqlite_date(self.enc.decrypt_str(created)), password_hash
+        )
 
     def add_user(self, username: str, password_hash: str) -> int:
         with self._connect() as conn:
@@ -45,9 +47,13 @@ class UserDB(DatabaseBase):
 
             cursor.execute(
                 """
-                INSERT INTO users (password_hash, username_hash) VALUES (?, ?)
+                INSERT INTO users (password_hash, username_hash, created) VALUES (?, ?, ?)
                 """,
-                (password_hash, self.enc.hash_username(username)),
+                (
+                    password_hash,
+                    self.enc.hash_username(username),
+                    self._encrypted_now(),
+                ),
             )
             id: int | None = cursor.lastrowid
             conn.commit()

@@ -17,7 +17,7 @@ class TestUserDB(UserDB):
         try:
             os.remove(TEST_DB_PATH)
         except Exception:
-            pass
+            ...
 
 
 TEST_USERNAME: str = "username"

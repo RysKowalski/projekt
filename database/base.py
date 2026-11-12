@@ -37,9 +37,7 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     password_hash TEXT NOT NULL,
                     username_hash BLOB UNIQUE NOT NULL,
-                    created DATETIME NOT NULL DEFAULT (
-                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                    )
+                    created BLOB NOT NULL
                 );
             """)
 
@@ -48,12 +46,8 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name BLOB NOT NULL,
                     user_id INTEGER NOT NULL,
-                    edited DATETIME NOT NULL DEFAULT (
-                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                    ),
-                    created DATETIME NOT NULL DEFAULT (
-                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                    ),
+                    edited BLOB NOT NULL,
+                    created BLOB NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
@@ -77,3 +71,6 @@ class DatabaseBase:
     @staticmethod
     def _from_sqlite_date(value: str) -> datetime:
         return datetime.fromisoformat(value)
+
+    def _encrypted_now(self) -> bytes:
+        return self.enc.encrypt(self._to_sqlite_date(datetime.now()))

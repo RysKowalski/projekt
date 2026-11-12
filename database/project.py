@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from sqlite3 import Cursor
 
-from declarations import Bitmaps, Bitmap
+from declarations import Bitmap, Bitmaps
+
 from .base import DatabaseBase
 
 
@@ -20,11 +21,17 @@ class ProjectDB(DatabaseBase):
         with self._connect() as conn:
             cursor: Cursor = conn.cursor()
 
+            now: bytes = self._encrypted_now()
             cursor.execute(
                 """
-                INSERT INTO projects (name, user_id) VALUES (?, ?)
+                INSERT INTO projects (name, user_id, edited, created) VALUES (?, ?, ?, ?)
             """,
-                (self.enc.encrypt(name), user_id),
+                (
+                    self.enc.encrypt(name),
+                    user_id,
+                    now,
+                    now,
+                ),
             )
 
             id: int | None = cursor.lastrowid
@@ -83,8 +90,8 @@ class ProjectDB(DatabaseBase):
         return Project(
             project_id,
             self.enc.decrypt_str(name),
-            self._from_sqlite_date(edited),
-            self._from_sqlite_date(created),
+            self._from_sqlite_date(self.enc.decrypt_str(edited)),
+            self._from_sqlite_date(self.enc.decrypt_str(created)),
         )
 
     def set_bitmap(self, project_id: int, bitmap: Bitmaps) -> None:
@@ -101,6 +108,16 @@ class ProjectDB(DatabaseBase):
                 """,
                     (project_id, name, encrypted_data),
                 )
+
+                cursor.execute(
+                    """
+                    UPDATE projects
+                    SET edited=?
+                    WHERE id=?
+                    """,
+                    (self._encrypted_now(), project_id),
+                )
+
             conn.commit()
 
     def get_bitmap(self, project_id: int) -> Bitmaps:
