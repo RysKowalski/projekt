@@ -13,7 +13,9 @@ class User:
 
 
 @dataclass(frozen=True)
-class UserInDb(User):
+class UserInDb:
+    id: int
+    created: datetime
     password_hash: str
 
 
@@ -24,9 +26,9 @@ class UserDB(DatabaseBase):
 
             cursor.execute(
                 """
-                SELECT id, created, password_hash FROM users WHERE name=?;
+                SELECT id, created, password_hash FROM users WHERE username_hash=?;
             """,
-                (username,),
+                (self.enc.hash_username(username),),
             )
 
             result = cursor.fetchone()
@@ -35,7 +37,7 @@ class UserDB(DatabaseBase):
 
         id, created, password_hash = result
 
-        return UserInDb(id, username, self._from_sqlite_date(created), password_hash)
+        return UserInDb(id, self._from_sqlite_date(created), password_hash)
 
     def add_user(self, username: str, password_hash: str) -> int:
         with self._connect() as conn:
@@ -43,9 +45,9 @@ class UserDB(DatabaseBase):
 
             cursor.execute(
                 """
-                INSERT INTO users (password_hash, name) VALUES (?, ?)
+                INSERT INTO users (password_hash, username_hash) VALUES (?, ?)
                 """,
-                (password_hash, username),
+                (password_hash, self.enc.hash_username(username)),
             )
             id: int | None = cursor.lastrowid
             conn.commit()

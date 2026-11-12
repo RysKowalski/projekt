@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 from database import DatabaseBase
 from encryption import Encryption
@@ -21,7 +21,7 @@ def test_creates_db() -> None:
 
 
 def test_to_sqlite_date() -> None:
-    value: datetime = datetime(2024, 5, 15, 12, 30, 45, tzinfo=timezone.utc)
+    value: datetime = datetime(2024, 5, 15, 12, 30, 45, tzinfo=UTC)
 
     result: str = DatabaseBase._to_sqlite_date(value)
 
@@ -49,7 +49,7 @@ def test_from_sqlite_date() -> None:
 
     result: datetime = DatabaseBase._from_sqlite_date(value)
 
-    assert result == datetime(2024, 5, 15, 12, 30, 45, tzinfo=timezone.utc)
+    assert result == datetime(2024, 5, 15, 12, 30, 45, tzinfo=UTC)
 
 
 def test_from_sqlite_date_with_offset() -> None:

@@ -1,7 +1,7 @@
 import os
+
 from database import UserDB, UserInDb
 from encryption import Encryption
-
 
 TEST_DB_PATH: str = "test_db.sqlite"
 
@@ -39,7 +39,6 @@ def test_add_get_user() -> None:
     result: UserInDb | None = db.get_user(TEST_USERNAME)
 
     assert result is not None
-    assert result.username == TEST_USERNAME
     assert result.password_hash == TEST_PASSWORD_HASH
 
 
@@ -49,8 +48,7 @@ def test_add_user_returns_correct_id() -> None:
 
     user: UserInDb | None = db.get_user(TEST_USERNAME)
 
-    if user is None:
-        raise
+    assert user is not None
     assert id == user.id
 
 
