@@ -54,19 +54,14 @@ class Font:
 
         for y in range(self.height):
             x = 0
-
-            while x < width:
-                state = bitmap[y][x][0]
-                amount = bitmap[y][x][1]
-
-                if (state):
+            for state, amount in bitmap[y]:
+                if state:
                     self.pixels_to_square(pen, x, y, amount)
-
-                x += amount 
+                x += amount
 
         return pen.glyph()
 
-    def create_font(self, bitmaps: Bitmaps, name: str, baseline: int = 0) -> BytesIO:
+    def create_font(self, bitmaps: Bitmaps, name: str, baseline: int = 0, generate_font_file: bool = False) -> BytesIO:
         self.update_variables(bitmaps, baseline)
         # units per em is how many
         fb = FontBuilder(self.unit_per_em, isTTF=True)
@@ -88,7 +83,9 @@ class Font:
             print(char_name)
             glyphs[char_name] = self.bitmap_to_glyph(bitmap)
 
-            width = len(bitmap[0])
+            width = 0
+            for item in bitmap[0]:
+                width += item[1] # we cant use len() because bitmap comes optimized
 
             # scaled width with margins
             actual_width = width * self.scale + self.left_margin + self.right_margin
@@ -131,7 +128,12 @@ class Font:
 
         file: BytesIO = BytesIO()
         fb.save(file)
+
+        if (generate_font_file):
+            with open("font.ttf", "wb") as f:
+                f.write(file.getvalue())
         return file
+
 
 
     @staticmethod
@@ -155,8 +157,18 @@ class Font:
                     
 
 character = [
-    [False, True, False, False, False],
-    [True, True, True, False, False]
+    [False, True,  True,  True,  False],
+    [True,  False, False, False, True],
+    [True,  True,  True,  True,  True],
+    [True,  False, False, False, True],
+    [True,  False, False, False, True]
 ]
 
-print(Font.optimize_bitmap(character))
+bitmap = Font.optimize_bitmap(character)
+
+print(bitmap)
+bitmaps = {
+    'A': bitmap
+}
+font = Font()
+font.create_font(bitmaps, "font.ttf", generate_font_file=True)
