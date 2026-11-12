@@ -1,7 +1,7 @@
 import sqlite3
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from sqlite3 import Connection, Cursor
 from typing import TYPE_CHECKING
 
@@ -13,7 +13,7 @@ class DatabaseBase:
     def __init__(
         self, encryption: "Encryption", db_path: str = "database.sqlite"
     ) -> None:
-        self.enc: "Encryption" = encryption
+        self.enc: Encryption = encryption
         self.db_path: str = db_path
         self.create_tables()
 
@@ -36,10 +36,8 @@ class DatabaseBase:
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     password_hash TEXT NOT NULL,
-                    name TEXT UNIQUE NOT NULL,
-                    created DATETIME NOT NULL DEFAULT (
-                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                    )
+                    username_hash BLOB UNIQUE NOT NULL,
+                    created BLOB NOT NULL
                 );
             """)
 
@@ -48,12 +46,8 @@ class DatabaseBase:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name BLOB NOT NULL,
                     user_id INTEGER NOT NULL,
-                    edited DATETIME NOT NULL DEFAULT (
-                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                    ),
-                    created DATETIME NOT NULL DEFAULT (
-                        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-                    ),
+                    edited BLOB NOT NULL,
+                    created BLOB NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 );
             """)
@@ -72,8 +66,11 @@ class DatabaseBase:
 
     @staticmethod
     def _to_sqlite_date(value: datetime) -> str:
-        return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+        return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
     @staticmethod
     def _from_sqlite_date(value: str) -> datetime:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return datetime.fromisoformat(value)
+
+    def _encrypted_now(self) -> bytes:
+        return self.enc.encrypt(self._to_sqlite_date(datetime.now()))

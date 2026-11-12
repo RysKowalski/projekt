@@ -1,8 +1,8 @@
 import os
+
 from database import Database, Project
 from declarations import Bitmaps
 from encryption import Encryption
-
 
 TEST_DB_PATH: str = "test_db.sqlite"
 TEST_USERNAME: str = "username"
@@ -29,7 +29,7 @@ class TestDatabase(Database):
         try:
             os.remove(TEST_DB_PATH)
         except Exception:
-            pass
+            ...
 
 
 def test_get_nonexistent() -> None:
