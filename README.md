@@ -5,8 +5,21 @@
 - install dependencies with
   `pip install -r requirements.txt`
 
-- create .env with secret key
-  `SECRET_KEY=""`
+- create .env with secret keys
+
+  ```
+  HASHING_KEY=""
+  ENCRYPTION_KEY=""
+  ```
+
+  `HASHING_KEY` should be generated with `openssl rand -hex 32`
+
+  `ENCRYPTION_KEY` should be generated with python code
+
+  ```
+  from cryptography.fernet import Fernet
+  Fernet.generate_key()
+  ```
 
 ## running
 

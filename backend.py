@@ -2,7 +2,7 @@ from io import BytesIO
 
 from fontTools.pens.ttGlyphPen import TTGlyphPen, Glyph
 from fontTools.fontBuilder import FontBuilder
-from declarations import Bitmaps
+from declarations import Bitmaps, Bitmap
 
 
 class Font:
@@ -14,6 +14,7 @@ class Font:
 
         # every glyph should be the same height!
         self.height: int = len(list(bitmaps.values())[0])
+        # ^ it is written like this because we work with bitmapS not bitmap. 
 
         # unit per em is canvas for a glyph. it most often should sum to 1000 or 2048
         # it is used for nice scaling so when user selects 6px font it scales to it
@@ -31,10 +32,10 @@ class Font:
         self.bitmaps: Bitmaps = bitmaps
 
     # for some fucking reason variables are copied and lists maps etc are references so pen is &pen
-    def pixel_to_square(self, pen: TTGlyphPen, x: int, y: int) -> None:
+    def pixels_to_square(self, pen: TTGlyphPen, x: int, y: int, amount: int) -> None:
         # 1.turning pixels into coordinates (see notes for more info)
         xmin = x * self.scale
-        xmax = (x + 1) * self.scale
+        xmax = (x + amount) * self.scale
         ymin = (self.baseline - 1 - y) * self.scale
         ymax = (self.baseline - y) * self.scale
 
@@ -52,13 +53,15 @@ class Font:
         pen: TTGlyphPen = TTGlyphPen(None)
 
         for y in range(self.height):
-            for x in range(width):
-                if bitmap[y][x]:
-                    self.pixel_to_square(pen, x, y)
+            x = 0
+            for state, amount in bitmap[y]:
+                if state:
+                    self.pixels_to_square(pen, x, y, amount)
+                x += amount
 
         return pen.glyph()
 
-    def create_font(self, bitmaps: Bitmaps, name: str, baseline: int = 0) -> BytesIO:
+    def create_font(self, bitmaps: Bitmaps, name: str, baseline: int = 0, generate_font_file: bool = False) -> BytesIO:
         self.update_variables(bitmaps, baseline)
         # units per em is how many
         fb = FontBuilder(self.unit_per_em, isTTF=True)
@@ -80,7 +83,9 @@ class Font:
             print(char_name)
             glyphs[char_name] = self.bitmap_to_glyph(bitmap)
 
-            width = len(bitmap[0])
+            width = 0
+            for item in bitmap[0]:
+                width += item[1] # we cant use len() because bitmap comes optimized
 
             # scaled width with margins
             actual_width = width * self.scale + self.left_margin + self.right_margin
@@ -123,22 +128,47 @@ class Font:
 
         file: BytesIO = BytesIO()
         fb.save(file)
+
+        if (generate_font_file):
+            with open("font.ttf", "wb") as f:
+                f.write(file.getvalue())
         return file
 
 
-if __name__ == "__main__":
-    f: Font = Font()
 
-    bitmaps: Bitmaps = {}
-    alphabet = "abcdefghijklmnoprstuwxyz"
+    @staticmethod
+    def optimize_bitmap(bitmap): # it will be done on front end but this function can be used for tests here
+        optimized_bitmap = []
+        for row in bitmap:
+            optimized_row = []
+            current_state = row[0]
+            amount = 1
+            for state in row[1:]: # we cut the first value since it is taken as a state
+                if (current_state == state):
+                    amount += 1
+                else:
+                    optimized_row.append((current_state, amount))
+                    current_state = state
+                    amount = 1
 
-    for c in alphabet:
-        print(c)
-        bitmaps[c] = [[(True, 1000)] for _ in range(1000)]
-    for c in alphabet:
-        print(c.capitalize())
-        bitmaps[c.capitalize()] = [[(False, 1000)] for _ in range(1000)]
+            optimized_row.append((current_state, amount))
+            optimized_bitmap.append(optimized_row)
+        return optimized_bitmap
+                    
 
-    with open("test.ttf", "wb") as file:
-        g = f.create_font(bitmaps, "test")
-        file.write(g.getvalue())
+character = [
+    [False, True,  True,  True,  False],
+    [True,  False, False, False, True],
+    [True,  True,  True,  True,  True],
+    [True,  False, False, False, True],
+    [True,  False, False, False, True]
+]
+
+bitmap = Font.optimize_bitmap(character)
+
+print(bitmap)
+bitmaps = {
+    'A': bitmap
+}
+font = Font()
+font.create_font(bitmaps, "font.ttf", generate_font_file=True)

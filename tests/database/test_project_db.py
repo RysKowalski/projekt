@@ -1,7 +1,8 @@
 import os
+
 from database import Database, Project
 from declarations import Bitmaps
-
+from encryption import Encryption
 
 TEST_DB_PATH: str = "test_db.sqlite"
 TEST_USERNAME: str = "username"
@@ -18,15 +19,17 @@ TEST_BITMAPS: Bitmaps = {
 
 
 class TestDatabase(Database):
+    e = Encryption()
+
     def __init__(self, db_path: str = TEST_DB_PATH) -> None:
         self.__del__()
-        super().__init__(db_path)
+        super().__init__(self.e, db_path)
 
     def __del__(self) -> None:
         try:
             os.remove(TEST_DB_PATH)
         except Exception:
-            pass
+            ...
 
 
 def test_get_nonexistent() -> None:

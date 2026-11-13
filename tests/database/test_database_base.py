@@ -1,19 +1,27 @@
 import os
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 from database import DatabaseBase
+from encryption import Encryption
+
+
+class DBTest(DatabaseBase):
+    e = Encryption()
+
+    def __init__(self, db_path: str) -> None:
+        super().__init__(self.e, db_path)
 
 
 def test_creates_db() -> None:
     TEST_DB_PATH: str = "test_db.sqlite"
-    _ = DatabaseBase(TEST_DB_PATH)
+    _ = DBTest(TEST_DB_PATH)
 
     assert os.path.exists(TEST_DB_PATH)
     os.remove(TEST_DB_PATH)
 
 
 def test_to_sqlite_date() -> None:
-    value: datetime = datetime(2024, 5, 15, 12, 30, 45, tzinfo=timezone.utc)
+    value: datetime = datetime(2024, 5, 15, 12, 30, 45, tzinfo=UTC)
 
     result: str = DatabaseBase._to_sqlite_date(value)
 
@@ -41,7 +49,7 @@ def test_from_sqlite_date() -> None:
 
     result: datetime = DatabaseBase._from_sqlite_date(value)
 
-    assert result == datetime(2024, 5, 15, 12, 30, 45, tzinfo=timezone.utc)
+    assert result == datetime(2024, 5, 15, 12, 30, 45, tzinfo=UTC)
 
 
 def test_from_sqlite_date_with_offset() -> None:

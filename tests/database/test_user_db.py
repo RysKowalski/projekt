@@ -1,20 +1,23 @@
 import os
-from database import UserDB, UserInDb
 
+from database import UserDB, UserInDb
+from encryption import Encryption
 
 TEST_DB_PATH: str = "test_db.sqlite"
 
 
 class TestUserDB(UserDB):
+    e = Encryption()
+
     def __init__(self, db_path: str = TEST_DB_PATH) -> None:
         self.__del__()
-        super().__init__(db_path)
+        super().__init__(self.e, db_path)
 
     def __del__(self) -> None:
         try:
             os.remove(TEST_DB_PATH)
         except Exception:
-            pass
+            ...
 
 
 TEST_USERNAME: str = "username"
@@ -36,7 +39,6 @@ def test_add_get_user() -> None:
     result: UserInDb | None = db.get_user(TEST_USERNAME)
 
     assert result is not None
-    assert result.username == TEST_USERNAME
     assert result.password_hash == TEST_PASSWORD_HASH
 
 
@@ -46,8 +48,7 @@ def test_add_user_returns_correct_id() -> None:
 
     user: UserInDb | None = db.get_user(TEST_USERNAME)
 
-    if user is None:
-        raise
+    assert user is not None
     assert id == user.id
 
 
