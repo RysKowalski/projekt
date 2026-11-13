@@ -26,6 +26,7 @@ ctx.lineCap = "round";
 ctx.lineJoin = "round";
 ctx.strokeStyle = "#fafafa";
 
+
 canvas.addEventListener("mousedown", (e) => {
     drawing = true;
 
@@ -62,3 +63,88 @@ function getMousePos(e) {
         x: (e.clientX - rect.left) * (fontWidth / rect.width), 
         y: (e.clientY - rect.top) * (fontHeight / rect.height)};
     }
+
+
+//toolbox
+const toolbox = document.getElementById("toolbox");
+const sizeSlider = document.getElementById("slider");
+
+sizeSlider.addEventListener("change", updateToolSize);
+
+updateToolSize();
+
+for(const child of toolbox.children) {
+    if (child.className != "tool") {
+        continue;
+    }
+    
+    child.addEventListener("click", () => {
+        toolSelect(child.dataset.toolName);
+    });
+}
+
+function toolSelect(selectedTool) {
+    for (const child of toolbox.children) {
+        child.dataset.selected = "false";
+    }
+
+    for (const child of toolbox.children) {
+        if (child.dataset.toolName == selectedTool) {
+            child.dataset.selected = "true";
+            updateToolProperties(selectedTool);
+        }
+    }
+}
+
+function updateToolProperties(selectedTool) {
+    switch(selectedTool) {
+        case "pencil":
+            ctx.lineWidth = sizeSlider.value;
+            ctx.globalCompositeOperation = "source-over";
+            ctx.strokeStyle = "#fafafa";
+            break;
+
+        case "eraser":
+            ctx.globalCompositeOperation = "destination-out";
+            break;
+    }
+}
+
+function updateToolSize() {
+    const label = document.getElementById("slider-label");
+    label.innerHTML = sizeSlider.value;
+    ctx.lineWidth = sizeSlider.value;
+}
+
+
+//other
+
+const other = document.getElementById("other");
+
+other.addEventListener("click", exportData);
+
+function exportData() {
+    const exportCanvas = document.createElement("canvas");
+    const exportCtx = exportCanvas.getContext("2d");
+
+    exportCanvas.width = fontWidth;
+    exportCanvas.height = fontHeight;
+
+    exportCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, fontWidth, fontHeight);
+
+    const pixels = exportCtx.getImageData(0, 0, fontWidth, fontHeight);
+
+    const bitMap = [];
+
+    for (let i = 0; i < pixels.data.length; i += 4) {
+        if (pixels.data[i + 3] > 127) {
+            bitMap.push(1);
+        }
+        else {
+            bitMap.push(0);
+        }
+        
+    }
+
+    console.log(bitMap);
+}

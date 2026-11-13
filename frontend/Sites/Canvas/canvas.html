@@ -19,13 +19,18 @@
     <main>
         <section>
             <div id="toolbox">
-                <div class="tool"></div>
-                <div class="tool"></div>
-                <div class="tool"></div>
-                <div class="tool"></div>
+                <div class="tool" data-selected="true" data-tool-name="pencil"><img src="../../Images/Icons/pencil.png" alt="pencil"></div>
+                <div class="tool" data-selected="false" data-tool-name="eraser"><img src="../../Images/Icons/eraser.png" alt="eraser"></div>
+                <div class="tool" data-selected="false" data-tool-name="temp"></div>
+                <div id="tool-size">
+                    <input type="range" orient="vertical" id="slider" min="1" max="20" value="10" step="1">
+                    <h1 id="slider-label"></h1>
+                </div>
             </div>
             <canvas id="main-canvas"></canvas>
-            <div id="other"></div>
+            <div id="other">
+                <div class="tool"><img src="../../Images/Icons/pencil.png" alt="pencil"></div>
+            </div>
         </section>
     </main>
 

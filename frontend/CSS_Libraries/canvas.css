@@ -2,7 +2,7 @@
 
 :root {
     --bg: #09090b;
-    --surface: #101013;
+    --surface: #141415;
     --border: #27272a;
     --text: #fafafa;
     --secondaryText: #858585;
@@ -29,12 +29,57 @@ section {
 
 #toolbox, #other {
     height: 100%;
-    width: 8%;
+    width: 7%;
     flex: 0, 0 0;
     min-width: 0;
 
     border: 3px solid var(--border);
     border-radius: 0.5vw;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.tool {
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-bottom: var(--border) 3px solid;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    cursor: pointer;
+}
+
+.tool[data-selected="true"] {
+    background-color: var(--surface);
+}
+
+.tool img {
+    width: 65%;
+    aspect-ratio: 1/1;
+}
+
+#tool-size {
+    width: 100%;
+    flex: 1;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+#tool-size h1 {
+    margin-top: 2%;
+    margin-bottom: 2%;
+    color: var(--text);
+}
+
+#slider [orient=vertical]{
+    writing-mode: vertical-lr;
+    direction: ltr;
 }
 
 canvas {
@@ -46,4 +91,6 @@ canvas {
     border-radius: 1vw;
 
     flex: 0 1 auto;
+
+    cursor: pointer;
 }
