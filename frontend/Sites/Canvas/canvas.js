@@ -136,15 +136,51 @@ function exportData() {
 
     const bitMap = [];
 
-    for (let i = 0; i < pixels.data.length; i += 4) {
-        if (pixels.data[i + 3] > 127) {
-            bitMap.push(1);
+    for (let y = 0; y < fontHeight; y++) {
+        const row = [];
+
+        for (let x = 0; x < fontWidth; x++) {
+            const i = (y * fontWidth + x) * 4;
+
+            if (pixels.data[i + 3] > 127) {
+                row.push(1);
+            }
+            else {
+                row.push(0);
+            }
         }
-        else {
-            bitMap.push(0);
-        }
-        
+
+        bitMap.push(row);
     }
 
-    console.log(bitMap);
+    const convertedBitMap = [];
+
+    for (let y = 0; y < fontHeight; y++) {
+        const row = bitMap[y];
+        const convertedRow = [];
+
+        let lastUniqueValue = null;
+        let sameValueCombo = 0;
+        for (let i = 0; i < row.length; i++) {
+
+            if (lastUniqueValue == null) {
+                lastUniqueValue = row[i];
+                sameValueCombo = 1;
+                continue;
+            }
+
+            if (lastUniqueValue == row[i]) {
+                sameValueCombo++;
+            }
+            else {
+                convertedRow.push([Boolean(lastUniqueValue), sameValueCombo]);
+                lastUniqueValue = row[i];
+                sameValueCombo = 0;
+            }
+        }
+        convertedRow.push([Boolean(lastUniqueValue), sameValueCombo]);
+        convertedBitMap.push(convertedRow);
+    }
+
+    console.log(convertedBitMap);
 }
