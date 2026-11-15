@@ -70,11 +70,12 @@ const toolbox = document.getElementById("toolbox");
 const sizeSlider = document.getElementById("slider");
 
 sizeSlider.addEventListener("change", updateToolSize);
+document.getElementById("eraseAll").addEventListener("click", eraseAll);
 
 updateToolSize();
 
 for(const child of toolbox.children) {
-    if (child.className != "tool") {
+    if (child.className != "tool" || child.dataset.selectable == "false") {
         continue;
     }
     
@@ -114,6 +115,10 @@ function updateToolSize() {
     const label = document.getElementById("slider-label");
     label.innerHTML = sizeSlider.value;
     ctx.lineWidth = sizeSlider.value;
+}
+
+function eraseAll() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 
