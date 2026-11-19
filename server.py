@@ -38,6 +38,14 @@ class RegisterData(BaseModel):
     password: str
 
 
+class CreateProjectData(BaseModel):
+    name: str
+
+
+class ID(BaseModel):
+    id: int
+
+
 load_dotenv()
 # openssl rand -hex 32
 HASHING_KEY: str | None = os.getenv("HASHING_KEY")
@@ -122,17 +130,17 @@ async def get_current_user(
 
 
 async def get_project_id(
-    project_id: int, current_user: Annotated[User, Depends(get_current_user)]
+    project_id: ID, current_user: Annotated[User, Depends(get_current_user)]
 ) -> int:
     avalible_projects: list[tuple[int, str]] = db.get_project_list(current_user.id)
     project_ids: list[int] = [p[0] for p in avalible_projects]
 
-    if project_id not in project_ids:
+    if project_id.id not in project_ids:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
             detail="No permission to access this project",
         )
-    return project_id
+    return project_id.id
 
 
 @api_router.post("/token")
@@ -153,7 +161,7 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@api_router.post("/ttf")
+@api_router.post("/ttf")  # get requests cannot have a body
 async def get_ttf(
     project_id: Annotated[int, Depends(get_project_id)],
 ) -> Response:
@@ -195,10 +203,10 @@ def delete_user(current_user: Annotated[User, Depends(get_current_user)]) -> Non
 
 @api_router.post("/create_project")
 def create_project(
-    name: str,
+    create_project_data: CreateProjectData,
     user: Annotated[User, Depends(get_current_user)],
 ) -> int:
-    return db.add_project(user.id, name)
+    return db.add_project(user.id, create_project_data.name)
 
 
 @api_router.delete("/delete_project")

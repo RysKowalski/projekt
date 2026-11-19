@@ -1,9 +1,19 @@
-export const API = (() => {
-  let accessToken = null;
 
-  /**
-   * Authenticate and obtain an access token.
-   */
+const TOKEN_KEY = "access_token";
+
+export const API = (() => {
+  let accessToken = localStorage.getItem(TOKEN_KEY);
+
+  function setToken(token) {
+    accessToken = token;
+
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  }
+
   async function login(username, password) {
     const response = await fetch("/api/token", {
       method: "POST",
@@ -22,29 +32,26 @@ export const API = (() => {
 
     const data = await response.json();
 
-    accessToken = data.access_token;
+    setToken(data.access_token);
 
     return data;
   }
 
-  /**
-   * Clear the current access token.
-   */
   function logout() {
-    accessToken = null;
+    setToken(null);
   }
 
-  /**
-   * Send an authenticated HTTP request.
-   */
   async function request(url, options = {}) {
-    if (!accessToken) {
+    const token = localStorage.getItem(TOKEN_KEY);
+
+    if (!token) {
       throw new Error("Not authenticated. Call login() first.");
     }
 
-    const headers = new Headers(options.headers || {});
+    accessToken = token;
 
-    headers.set("Authorization", `Bearer ${accessToken}`);
+    const headers = new Headers(options.headers || {});
+    headers.set("Authorization", `Bearer ${token}`);
 
     const response = await fetch(url, {
       ...options,
@@ -67,9 +74,6 @@ export const API = (() => {
     return response.json();
   }
 
-  /**
-   * Convenience HTTP methods.
-   */
   return {
     login,
     logout,
