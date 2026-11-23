@@ -84,8 +84,7 @@ section {
 
 canvas {
     height: 100%;
-    width: auto;
-    max-width: 60vw;
+    width: 100%;
 
     border: 3px solid var(--border);
     border-radius: 1vw;
@@ -93,4 +92,26 @@ canvas {
     flex: 0 1 auto;
 
     cursor: pointer;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: absolute;
+}
+
+#canvas-wrapper {
+    height: 100%;
+    width: auto;
+    max-width: 60vw;
+
+    position: relative;
+}
+
+#main-canvas {
+    z-index: 1;
+}
+
+#background-canvas {
+    z-index: 0;
 }
