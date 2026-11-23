@@ -81,7 +81,15 @@ class Font:
         print("\ngenerating: ")
         for char_name, bitmap in self.bitmaps.items():
             print(char_name)
-            glyphs[char_name] = self.bitmap_to_glyph(bitmap)
+
+            # fonttools works only for standard ASCII characters.
+            # if we would had 'Ą' character it would crash since its not ASCII.
+            # to avoid that we instead give each character a name wchich is unicode number of letter instead of the actual letter
+            # Ą -> 260
+            # ord() function changes character to unicode code
+            glyph_name = str(ord(char_name))
+     
+            glyphs[glyph_name] = self.bitmap_to_glyph(bitmap)
 
             width = 0
             for item in bitmap[0]:
@@ -90,9 +98,9 @@ class Font:
             # scaled width with margins
             actual_width = width * self.scale + self.left_margin + self.right_margin
 
-            cmap[ord(char_name)] = char_name
+            cmap[ord(char_name)] = glyph_name
 
-            hmetrics[char_name] = (actual_width, self.left_margin)
+            hmetrics[glyph_name] = (actual_width, self.left_margin)
 
         # makes keys into glyph ids
         fb.setupGlyphOrder(list(glyphs.keys()))
@@ -156,19 +164,20 @@ class Font:
         return optimized_bitmap
                     
 
-character = [
-    [False, True,  True,  True,  False],
-    [True,  False, False, False, True],
-    [True,  True,  True,  True,  True],
-    [True,  False, False, False, True],
-    [True,  False, False, False, True]
-]
+if __name__ == '__main__':
+    character = [
+        [False, True,  True,  True,  False],
+        [True,  False, False, False, True],
+        [True,  True,  True,  True,  True],
+        [True,  False, False, False, True],
+        [True,  False, False, False, True]
+    ]
 
-bitmap = Font.optimize_bitmap(character)
+    bitmap = Font.optimize_bitmap(character)
 
-print(bitmap)
-bitmaps = {
-    'A': bitmap
-}
-font = Font()
-font.create_font(bitmaps, "font.ttf", generate_font_file=True)
+    print(bitmap)
+    bitmaps = {
+        'Ą': bitmap
+    }
+    font = Font()
+    font.create_font(bitmaps, "font.ttf", generate_font_file=True)
