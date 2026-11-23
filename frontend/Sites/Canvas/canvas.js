@@ -1,3 +1,5 @@
+import { API } from "/api.js";
+
 const canvas = document.getElementById("main-canvas");
 const ctx = canvas.getContext("2d");
 
@@ -28,41 +30,42 @@ ctx.strokeStyle = "#fafafa";
 
 
 canvas.addEventListener("mousedown", (e) => {
-    drawing = true;
+  drawing = true;
 
-    const pos = getMousePos(e);
+  const pos = getMousePos(e);
 
-    lastX = pos.x;
-    lastY = pos.y;
+  lastX = pos.x;
+  lastY = pos.y;
 });
 
 canvas.addEventListener("mouseup", () => {
-    drawing = false;
+  drawing = false;
 });
 
 canvas.addEventListener("mousemove", (e) => {
-    if (!drawing) return;
+  if (!drawing) return;
 
-    const pos = getMousePos(e);
+  const pos = getMousePos(e);
 
-    ctx.beginPath();
+  ctx.beginPath();
 
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(pos.x, pos.y);
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
 
-    ctx.stroke();
+  ctx.stroke();
 
-    lastX = pos.x;
-    lastY = pos.y;
+  lastX = pos.x;
+  lastY = pos.y;
 });
 
 function getMousePos(e) {
-    const rect = canvas.getBoundingClientRect();
+  const rect = canvas.getBoundingClientRect();
 
-    return {
-        x: (e.clientX - rect.left) * (fontWidth / rect.width), 
-        y: (e.clientY - rect.top) * (fontHeight / rect.height)};
-    }
+  return {
+    x: (e.clientX - rect.left) * (fontWidth / rect.width),
+    y: (e.clientY - rect.top) * (fontHeight / rect.height)
+  };
+}
 
 
 //toolbox
@@ -74,51 +77,51 @@ document.getElementById("eraseAll").addEventListener("click", eraseAll);
 
 updateToolSize();
 
-for(const child of toolbox.children) {
-    if (child.className != "tool" || child.dataset.selectable == "false") {
-        continue;
-    }
-    
-    child.addEventListener("click", () => {
-        toolSelect(child.dataset.toolName);
-    });
+for (const child of toolbox.children) {
+  if (child.className != "tool" || child.dataset.selectable == "false") {
+    continue;
+  }
+
+  child.addEventListener("click", () => {
+    toolSelect(child.dataset.toolName);
+  });
 }
 
 function toolSelect(selectedTool) {
-    for (const child of toolbox.children) {
-        child.dataset.selected = "false";
-    }
+  for (const child of toolbox.children) {
+    child.dataset.selected = "false";
+  }
 
-    for (const child of toolbox.children) {
-        if (child.dataset.toolName == selectedTool) {
-            child.dataset.selected = "true";
-            updateToolProperties(selectedTool);
-        }
+  for (const child of toolbox.children) {
+    if (child.dataset.toolName == selectedTool) {
+      child.dataset.selected = "true";
+      updateToolProperties(selectedTool);
     }
+  }
 }
 
 function updateToolProperties(selectedTool) {
-    switch(selectedTool) {
-        case "pencil":
-            ctx.lineWidth = sizeSlider.value;
-            ctx.globalCompositeOperation = "source-over";
-            ctx.strokeStyle = "#fafafa";
-            break;
+  switch (selectedTool) {
+    case "pencil":
+      ctx.lineWidth = sizeSlider.value;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.strokeStyle = "#fafafa";
+      break;
 
-        case "eraser":
-            ctx.globalCompositeOperation = "destination-out";
-            break;
-    }
+    case "eraser":
+      ctx.globalCompositeOperation = "destination-out";
+      break;
+  }
 }
 
 function updateToolSize() {
-    const label = document.getElementById("slider-label");
-    label.innerHTML = sizeSlider.value;
-    ctx.lineWidth = sizeSlider.value;
+  const label = document.getElementById("slider-label");
+  label.innerHTML = sizeSlider.value;
+  ctx.lineWidth = sizeSlider.value;
 }
 
 function eraseAll() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
 
 
@@ -128,64 +131,71 @@ const other = document.getElementById("other");
 
 other.addEventListener("click", exportData);
 
-function exportData() {
-    const exportCanvas = document.createElement("canvas");
-    const exportCtx = exportCanvas.getContext("2d");
+async function exportData() {
+  const exportCanvas = document.createElement("canvas");
+  const exportCtx = exportCanvas.getContext("2d");
 
-    exportCanvas.width = fontWidth;
-    exportCanvas.height = fontHeight;
+  exportCanvas.width = fontWidth;
+  exportCanvas.height = fontHeight;
 
-    exportCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, fontWidth, fontHeight);
+  exportCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, fontWidth, fontHeight);
 
-    const pixels = exportCtx.getImageData(0, 0, fontWidth, fontHeight);
+  const pixels = exportCtx.getImageData(0, 0, fontWidth, fontHeight);
 
-    const bitMap = [];
+  const bitMap = [];
 
-    for (let y = 0; y < fontHeight; y++) {
-        const row = [];
+  for (let y = 0; y < fontHeight; y++) {
+    const row = [];
 
-        for (let x = 0; x < fontWidth; x++) {
-            const i = (y * fontWidth + x) * 4;
+    for (let x = 0; x < fontWidth; x++) {
+      const i = (y * fontWidth + x) * 4;
 
-            if (pixels.data[i + 3] > 127) {
-                row.push(1);
-            }
-            else {
-                row.push(0);
-            }
-        }
-
-        bitMap.push(row);
+      if (pixels.data[i + 3] > 127) {
+        row.push(1);
+      }
+      else {
+        row.push(0);
+      }
     }
 
-    const convertedBitMap = [];
+    bitMap.push(row);
+  }
 
-    for (let y = 0; y < fontHeight; y++) {
-        const row = bitMap[y];
-        const convertedRow = [];
+  const convertedBitMap = [];
 
-        let lastUniqueValue = null;
-        let sameValueCombo = 0;
-        for (let i = 0; i < row.length; i++) {
+  for (let y = 0; y < fontHeight; y++) {
+    const row = bitMap[y];
+    const convertedRow = [];
 
-            if (lastUniqueValue == null) {
-                lastUniqueValue = row[i];
-                sameValueCombo = 1;
-                continue;
-            }
+    let lastUniqueValue = null;
+    let sameValueCombo = 0;
+    for (let i = 0; i < row.length; i++) {
 
-            if (lastUniqueValue == row[i]) {
-                sameValueCombo++;
-            }
-            else {
-                convertedRow.push([Boolean(lastUniqueValue), sameValueCombo]);
-                lastUniqueValue = row[i];
-                sameValueCombo = 0;
-            }
-        }
+      if (lastUniqueValue == null) {
+        lastUniqueValue = row[i];
+        sameValueCombo = 1;
+        continue;
+      }
+
+      if (lastUniqueValue == row[i]) {
+        sameValueCombo++;
+      }
+      else {
         convertedRow.push([Boolean(lastUniqueValue), sameValueCombo]);
-        convertedBitMap.push(convertedRow);
+        lastUniqueValue = row[i];
+        sameValueCombo = 0;
+      }
     }
+    convertedRow.push([Boolean(lastUniqueValue), sameValueCombo]);
+    convertedBitMap.push(convertedRow);
+  }
 
-    console.log(convertedBitMap);
+  console.log(convertedBitMap);
+
+  console.log(await API.get("/api/project_list", {}))
+  await API.post("/api/create_project", { name: "project" })
+
+  await API.put("/api/bitmaps", { bitmaps: { a: convertedBitMap }, project_id: { id: 1 } })
+
+  console.log(await API.post("/api/ttf", { id: 1 }))
 }

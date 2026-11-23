@@ -210,9 +210,7 @@ def create_project(
 
 
 @api_router.delete("/delete_project")
-def delete_project(
-    project_id: int, _: Annotated[User, Depends(get_current_user)]
-) -> None:
+def delete_project(project_id: Annotated[int, Depends(get_project_id)]) -> None:
     db.delete_project(project_id)
 
 
